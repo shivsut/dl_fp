@@ -1,13 +1,22 @@
 import torch
 import numpy as np
+
+
 def limit_period(angle):
     # turn angle into -1 to 1
     return angle - torch.floor(angle / 2 + 0.5) * 2
 
+
 class Team:
     agent_type = 'state'
 
-    def extract_features(self,pstate, soccer_state, opponent_state, team_id):
+    def extract_features(self, pstate, soccer_state, opponent_state, team_id):
+
+        if self.verbose:
+            print("Our agent, extract_features function")
+            import pdb;
+            pdb.set_trace()
+
         # features of ego-vehicle
         kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)[[0, 2]]
         kart_center = torch.tensor(pstate['kart']['location'], dtype=torch.float32)[[0, 2]]
@@ -50,6 +59,7 @@ class Team:
                                  kart_to_goal_line_angle_difference], dtype=torch.float32)
 
         return features
+
     def __init__(self):
         """
           TODO: Load your agent here. Load network parameters, and other parts of our model
@@ -57,6 +67,12 @@ class Team:
         """
         self.team = None
         self.num_players = None
+        self.verbose = False
+        self.use_model = False
+        if self.verbose:
+            print("Our agent, __init__() function")
+            import pdb;
+            pdb.set_trace()
 
     def new_match(self, team: int, num_players: int) -> list:
         """
@@ -71,6 +87,10 @@ class Team:
         """
            TODO: feel free to edit or delete any of the code below
         """
+        if self.verbose:
+            print("Our agent, new_match function")
+            import pdb;
+            pdb.set_trace()
         self.team, self.num_players = team, num_players
         return ['tux'] * num_players
 
@@ -105,21 +125,27 @@ class Team:
                  rescue:       bool (optional. no clue where you will end up though.)
                  steer:        float -1..1 steering angle
         """
-        # TODO: Change me. I'm just cruising straight
-        #return [dict(acceleration=1, steer=0)] * self.num_players
+        if self.verbose:
+            print("Our agent, Act function")
+            import pdb;
+            pdb.set_trace()
+
         actions = []
         for player_id, pstate in enumerate(player_state):
-            features = self.extract_features(pstate, soccer_state, opponent_state, self.team)
-            if player_id % 2 == 0:
-                acceleration = 0.1
-                steer  = 0.1
-                brake = False
-                #acceleration, steer, brake = self.model0(features)
+            # TODO: Use Policy to get the actions of each player
+            if self.use_model:
+                features = self.extract_features(pstate, soccer_state, opponent_state, self.team)
+                if player_id % 2 == 0:
+                    action = self.model0(features)
+                else:
+                    action = self.model1(features)
             else:
-                #acceleration, steer, brake = self.model1(features)
-                acceleration = 0.5
-                steer  = 0.5
-                brake = False
-            actions.append(dict(acceleration=acceleration, steer=steer, brake=brake))
+                # Generate random actions for all players
+                action = dict(acceleration=0.7, brake=0, drift=0,
+                              fire=0, nitro=0, rescue=0, steer=0.3)
+
+            # accumulate the action of each player
+            actions.append(action)
+
         return actions
 
