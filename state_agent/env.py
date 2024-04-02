@@ -5,6 +5,7 @@ from gymnasium import spaces
 import logging
 import numpy as np
 from collections import namedtuple
+from utils import VideoRecorder
 
 TRACK_NAME = 'icy_soccer_field'
 MAX_FRAMES = 1000
@@ -57,6 +58,7 @@ class IceHockeyAgent:
         if logging_level is not None:
             logging.basicConfig(level=logging_level)
         # TODO: Define the following parameter
+        # RaceConfig = self._pystk.RaceConfig
         self.timeout = 1e10
         self.num_player = 2
         self.initial_ball_location=[0, 0]
@@ -70,6 +72,8 @@ class IceHockeyAgent:
         # Irrelevant
         self.started = False
         self.AI = None
+        self.info = {}
+        self.reset()
 
     def __del__(self):
         if hasattr(self, '_pystk') and self._pystk is not None and self._pystk.clean is not None:  # Don't ask why...
@@ -129,6 +133,8 @@ class IceHockeyAgent:
         return self.playerKart.finish_time > 0
 
     def reset(self, seed=None):
+        self.truncated = False
+        self.terminated = False
         RaceConfig = self._pystk.RaceConfig
 
         logging.info('Creating teams')
@@ -151,7 +157,6 @@ class IceHockeyAgent:
 
         # Start the match
         logging.info('Starting race')
-        import pdb; pdb.set_trace()
         self.race = self._pystk.Race(race_config)
         self.race.start()
 
@@ -160,35 +165,33 @@ class IceHockeyAgent:
         self.state.set_ball_location((self.initial_ball_location[0], 1, self.initial_ball_location[1]),
                                 (self.initial_ball_velocity[0], 0, self.initial_ball_velocity[1]))
 
-        self.close()
+        # self.close()
     
 
     def step(self, action=None):
-        self.state.update()
-
+        # self.state.update()
         # Get the state
         team1_state = [to_native(p) for p in self.state.players[0::2]]
         team2_state = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
+        # import pdb; pdb.set_trace()
         team1_images = team2_images = None
-        if self._use_graphics:
-            team1_images = [np.array(self.race.render_data[i].image) for i in range(0, len(self.race.render_data), 2)]
-            team2_images = [np.array(self.race.render_data[i].image) for i in range(1, len(self.race.render_data), 2)]
 
+        # Play the match (given the states)
         team1_actions_delayed = self._r(self.team1.act)(team1_state, team2_state, soccer_state)
         team2_actions_delayed = self._r(self.team2.act)(team2_state, team1_state, soccer_state)
 
         # Wait for the actions to finish
-        team1_actions = self._g(team1_actions_delayed) if t1_can_act else None
-        team2_actions = self._g(team2_actions_delayed) if t2_can_act else None
+        team1_actions = self._g(team1_actions_delayed) if self.t1_can_act else None
+        team2_actions = self._g(team2_actions_delayed) if self.t2_can_act else None
 
         new_t1_can_act, new_t2_can_act = self._check(self.team1, self.team2, 'act', self.timeout)
-        if not new_t1_can_act and t1_can_act and self.verbose:
+        if not new_t1_can_act and self.t1_can_act and self.verbose:
             print('Team 1 timed out')
-        if not new_t2_can_act and t2_can_act and self.verbose:
+        if not new_t2_can_act and self.t2_can_act and self.verbose:
             print('Team 2 timed out')
 
-        t1_can_act, t2_can_act = new_t1_can_act, new_t2_can_act
+        self.t1_can_act, self.t2_can_act = new_t1_can_act, new_t2_can_act
 
         # Assemble the actions
         actions = []
@@ -203,6 +206,29 @@ class IceHockeyAgent:
                                 team1_images=team1_images, team2_images=team2_images)
 
         logging.debug('  race.step  [score = {}]'.format(self.state.soccer.score))
+
+        if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_player):
+            self.truncated = True
+        if (sum(self.state.soccer.score) >= self.max_score):
+            self.terminated = True        
+        if not (self.truncated or self.terminated):
+            self.state.update()
+
+        self.observation = self.getObservation(team1_state) 
+        self.reward = self.getReward(self.state.soccer.score, self.observation)  
+        return self.observation, self.reward, self.terminated, self.truncated, self.info
+
+    def getObservation(self, state):
+        # dummy - team1 state
+        # import pdb; pdb.set_trace()
+        # return np.array(state)
+        return np.array([1.0]).astype(np.float32)
+
+    def getReward(self, scores, observation):
+        # Team1: Ours (positive reward)
+        # Team2: Opponent (negative reward)
+        return (scores[0] - scores[1])
+        
 
     def close(self):
         self.race.stop()
@@ -233,9 +259,9 @@ class IceHockeyEnv(gymnasium.Env):
         super(IceHockeyEnv, self).__init__()
         # team1 = AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
         # team2 = AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
-        # recorder = utils.VideoRecorder(args.record_video)
+        recorder = VideoRecorder("yay.mp4")
         team1, team2 = AIRunner(), AIRunner()
-        recorder = None 
+        # recorder = None 
         kwargs = {'team1':team1,'team2': team2, 'record_fn': recorder}
         env=IceHockeyAgent(**kwargs)
         self.env = env
@@ -251,21 +277,22 @@ class IceHockeyEnv(gymnasium.Env):
         )
 
     def step(self, action):
-        # reward = self.env.step(action)
-        reward = 1.0
-        # TODO: Fetch the observation space (Is it state space)
-        observation = np.array([1.0]).astype(np.float32) 
-        # TODO: Fetch the other information 
-        terminated = False 
-        truncated = False
-        info = {} 
-        return (observation, reward, terminated, truncated, info)
+        # observation, reward, terminated, truncated, info
+        return self.env.step(action)
+        # # reward = 1.0
+        # observation, reward, terminated, truncated, info = self.env.step(action)
+        # # TODO: Fetch the observation space (Is it state space)
+        # observation = np.array([1.0]).astype(np.float32) 
+        # return observation, reward, terminated, truncated, info
 
 
     def reset(self, seed=1, options=None):
-        # import pdb; pdb.set_trace()
+        # Calling the reset the function of parent class (gymnasium.Env)
         super().reset(seed=seed, options=options)
-        # return self.env.reset(seed=seed)
+        # Output of reset function: observation, info
+        # TODO later: 
+        # Check if we need observation from reset function
+        # Check if we need info for monitoring and debugging
         return np.array([1.0]).astype(np.float32), {}
 
     # TODO: Implement get_info function (required for debugging)
@@ -411,33 +438,5 @@ class MatchException(Exception):
 #     args = parser.parse_args()
 
 #     logging.basicConfig(level=environ.get('LOGLEVEL', 'WARNING').upper())
-
-#     import pdb; pdb.set_trace()
-#     if args.parallel is None or remote.ray is None:
-#         # Create the teams
-#         team1 = AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
-#         team2 = AIRunner() if args.team2 == 'AI' else TeamRunner(args.team2)
-
-#         # What should we record?
-#         recorder = None
-#         if args.record_video:
-#             recorder = recorder & utils.VideoRecorder(args.record_video)
-
-#         if args.record_state:
-#             recorder = recorder & utils.StateRecorder(args.record_state)
-
-#         # Start the match
-#         match = Match(use_graphics=team1.agent_type == 'image' or team2.agent_type == 'image')
-#         try:
-#             result = match.run(team1, team2, args.num_players, args.num_frames, max_score=args.max_score,
-#                                initial_ball_location=args.ball_location, initial_ball_velocity=args.ball_velocity,
-#                                record_fn=recorder)
-#         except MatchException as e:
-#             print('Match failed', e.score)
-#             print(' T1:', e.msg1)
-#             print(' T2:', e.msg2)
-
-#         print('Match results', result)
-
 
 

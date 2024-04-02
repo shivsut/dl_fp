@@ -6,16 +6,14 @@ def limit_period(angle):
     # turn angle into -1 to 1
     return angle - torch.floor(angle / 2 + 0.5) * 2
 
-
 class Team:
     agent_type = 'state'
 
     def extract_features(self, pstate, soccer_state, opponent_state, team_id):
-
+        
         if self.verbose:
             print("Our agent, extract_features function")
-            import pdb;
-            pdb.set_trace()
+            import pdb; pdb.set_trace()
 
         # features of ego-vehicle
         kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)[[0, 2]]
@@ -59,7 +57,7 @@ class Team:
                                  kart_to_goal_line_angle_difference], dtype=torch.float32)
 
         return features
-
+    
     def __init__(self):
         """
           TODO: Load your agent here. Load network parameters, and other parts of our model
@@ -71,8 +69,7 @@ class Team:
         self.use_model = False
         if self.verbose:
             print("Our agent, __init__() function")
-            import pdb;
-            pdb.set_trace()
+            import pdb; pdb.set_trace()
 
     def new_match(self, team: int, num_players: int) -> list:
         """
@@ -89,8 +86,7 @@ class Team:
         """
         if self.verbose:
             print("Our agent, new_match function")
-            import pdb;
-            pdb.set_trace()
+            import pdb; pdb.set_trace()
         self.team, self.num_players = team, num_players
         return ['tux'] * num_players
 
@@ -127,9 +123,8 @@ class Team:
         """
         if self.verbose:
             print("Our agent, Act function")
-            import pdb;
-            pdb.set_trace()
-
+            import pdb; pdb.set_trace()
+        
         actions = []
         for player_id, pstate in enumerate(player_state):
             # TODO: Use Policy to get the actions of each player
@@ -143,9 +138,9 @@ class Team:
                 # Generate random actions for all players
                 action = dict(acceleration=0.7, brake=0, drift=0,
                               fire=0, nitro=0, rescue=0, steer=0.3)
-
+            
             # accumulate the action of each player
             actions.append(action)
-
+        
         return actions
 
