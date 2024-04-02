@@ -69,3 +69,17 @@ Rewards (https://github.com/Rolv-Arild/Necto)
 
 
 psuedo code for necto rewards
+- game state reward = ball_pos closer to goal (continuos)
+- 
+
+
+
+
+
+Questions
+How does it know to reverse?
+continous space
+how can i train with some base agent
+circiculum learning - ppo 
+action space 
+rewarding shaping
