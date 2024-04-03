@@ -7,15 +7,15 @@ from stable_baselines3.common.env_util import make_vec_env
 from .env import IceHockeyEnv
 
 # Parallel environments
-# vec_env = make_vec_env("CartPole-v1", n_envs=4)
+vec_env = make_vec_env("CartPole-v1", n_envs=4)
 
 parser = ArgumentParser()
 parser.add_argument('-record_fn', default=None)
 args = parser.parse_args()
 
-vec_env = IceHockeyEnv(args, logging_level='DEBUG')
+vec_env = IceHockeyEnv(args, logging_level='ERROR')
 model = PPO("MlpPolicy", vec_env, verbose=1)
-model.learn(total_timesteps=10)
+model.learn(total_timesteps=100)
 model.save("hockey")
 
 # del model # remove to demonstrate saving and loading
