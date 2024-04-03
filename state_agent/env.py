@@ -247,7 +247,7 @@ class DummyTeam():
     def new_match(self):
         return ['tux'] * self.num_players
     def act(self, action):
-        return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.0 else False, nitro=False, drift=False, rescue=False, fire=False)]
+        return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.05 else False, nitro=True if action[3] > 0.05 else False, drift=True if action[4] > 0.05 else False, rescue=False, fire=False)]
     def reset(self):
         pass
 
@@ -279,7 +279,7 @@ class IceHockeyEnv(gymnasium.Env):
             logging.basicConfig(level=logging_level)
         self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
 
-        self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 0.1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, -1, 0, 0, 0]), high=np.array([1, 1, 0.1, 0.1, 0.1]), dtype=np.float32)
         # self.action_space = spaces.Dict(accel_and_steer = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32),brake = spaces.Discrete(n = 2, start=0))
         # TODO Max distance
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([90]), dtype=np.float32)
