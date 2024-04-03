@@ -6,7 +6,7 @@ from gymnasium import spaces
 import logging
 import numpy as np
 from collections import namedtuple
-from utils import VideoRecorder
+from .utils import VideoRecorder
 
 TRACK_NAME = 'icy_soccer_field'
 MAX_FRAMES = 1000
@@ -17,9 +17,9 @@ import gym
 import torch
 import pystk
 import numpy as np
-from reward import Reward
-from extract_state import extract_state_train_p1, extract_state_train
-from extract_state import extract_state_train_p2
+from .reward import Reward
+from .extract_state import extract_state_train_p1, extract_state_train
+from .extract_state import extract_state_train_p2
 
 def to_native(o):
     # Super obnoxious way to hide pystk
@@ -240,6 +240,17 @@ def to_native(o):
 #         pystk.clean()
 
 
+class DummyTeam():
+    def __init__(self, num_players, team_id):
+        self.num_players = num_players
+        self.team_id = team_id
+    def new_match(self):
+        return ['tux'] * self.num_players
+    def act(self, action):
+        return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
+    def reset(self):
+        pass
+
 class IceHockeyEnv(gymnasium.Env):
     """
     Observation:
@@ -259,40 +270,32 @@ class IceHockeyEnv(gymnasium.Env):
         -----------------------------------------------------------------
     """
 
-    def __init__(self, logging_level=None, **kwargs):
+    def __init__(self, args, logging_level=None):
         super(IceHockeyEnv, self).__init__()
         self._pystk = pystk
         self._pystk.init(self._pystk.GraphicsConfig.none())
         if logging_level is not None:
             logging.basicConfig(level=logging_level)
+        self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
 
-        self.action_space = spaces.Dict(acceleration=spaces.Discrete(10),
-                                        steer=spaces.Discrete(20),
-                                        # brake=spaces.Discrete(2),
-                                        # drift=spaces.Discrete(2),
-                                        # fire=spaces.Discrete(2),
-                                        # nitro=spaces.Discrete(2),
-                                        # rescue=spaces.Discrete(2)
-                                        )
-        self.observation_space = spaces.Dict(
-            ball_velocity = spaces.Discrete(100),
-            ball_to_player_dist = spaces.Discrete(100)
-        )
+        self.action_space = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32)
+        # TODO Max distance
+        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([100]), dtype=np.float32)
 
-        self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
-        self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
-
-        self.recorder = VideoRecorder(kwargs['record_fn']) if not kwargs['record_fn'] else None
-
+        # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
+        # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
         self.max_score = 3
-        self.num_players = 2
-        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=2 * self.num_players)
+        self.num_players = 1
+        self.team1 = DummyTeam(self.num_players, 0)
+
+        self.info = {}
+        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
         self.race_config.players.pop()
         for i in range(self.num_players):
-            self.race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, ['tux']))
-            self.race_config.players.append(self._make_config(1, hasattr(self.team2, 'is_ai') and self.team2.is_ai, ['tux']))
-        self.reset()
+            # self.race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, ['tux']))
+            self.race_config.players.append(self._make_config(0, False, 'tux'))
+        # self.reset()
 
     def _make_config(self, team_id, is_ai, kart):
         # TODO if not AI
@@ -302,25 +305,20 @@ class IceHockeyEnv(gymnasium.Env):
 
     def step(self, action):
         #pystk
-        self.info = None
         team1_state = [to_native(p) for p in self.state.players[0::2]]
         team2_state = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
-        team1_actions = self.team1.act(team1_state, team2_state, soccer_state)
-        team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
+        team1_actions = self.team1.act(action)
+        # team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
 
         # TODO check for error in info and raise MatchException
         # TODO check for timeout
-        actions = []
-        actions.extend(team1_actions)
-        actions.extend(team2_actions)
 
         if self.recorder:
-            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=actions,
-                                team1_images=None, team2_images=None)
+            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=team1_actions,team1_images=None, team2_images=None)
 
-        if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_player):
+        if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
             self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score):
             self.terminated = True
@@ -330,8 +328,8 @@ class IceHockeyEnv(gymnasium.Env):
         logging.info('state updated, calculating reward')
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
-
-        p_features = extract_state_train(team1_state_next, team2_state_next, self.state.soccer, 0)
+        soccer_state = to_native(self.state.soccer)
+        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
 
         reward = self.reward.step(p_features)
         logging.info(f'returning new state and reward {reward}')
@@ -347,7 +345,12 @@ class IceHockeyEnv(gymnasium.Env):
         self.race.start()
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
-        return self.state, None # state, info
+
+        team1_state_next = [to_native(p) for p in self.state.players[0::2]]
+        team2_state_next = [to_native(p) for p in self.state.players[1::2]]
+        soccer_state = to_native(self.state.soccer)
+        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
+        return np.array(p_features), self.info
 
     def close(self):
         self.race.stop()
