@@ -1,11 +1,12 @@
 import gymnasium
 import numpy as np
+import pystk
 from gymnasium import spaces
 
 import logging
 import numpy as np
 from collections import namedtuple
-from utils import VideoRecorder
+from .utils import VideoRecorder
 
 TRACK_NAME = 'icy_soccer_field'
 MAX_FRAMES = 1000
@@ -16,6 +17,9 @@ import gym
 import torch
 import pystk
 import numpy as np
+from .reward import Reward
+from .extract_state import extract_state_train_p1, extract_state_train
+from .extract_state import extract_state_train_p2
 
 def to_native(o):
     # Super obnoxious way to hide pystk
@@ -39,202 +43,213 @@ def to_native(o):
     return _to(o)
 
 
-class IceHockeyAgent:
-    """
-    SuperTuxKart agent for handling actions and getting state information from the environment.
-    The `STKEnv` class passes on the actions to this class for it to handle and gets the current
-    state(image) and various other info.
+# class IceHockeyAgent:
+#     """
+#     SuperTuxKart agent for handling actions and getting state information from the environment.
+#     The `STKEnv` class passes on the actions to this class for it to handle and gets the current
+#     state(image) and various other info.
+#
+#     :param graphicConfig: `pystk.GraphicsConfig` object specifying various graphic configs
+#     :param raceConfig: `pystk.RaceConfig` object specifying the track and other configs
+#     """
+#
+#     def __init__(self, logging_level=None, **kwargs):
+#         # Copied from runner.py
+#         import pystk
+#         self._pystk = pystk
+#         graphics_config = self._pystk.GraphicsConfig.none()
+#         self._pystk.init(graphics_config)
+#         if logging_level is not None:
+#             logging.basicConfig(level=logging_level)
+#         # TODO: Define the following parameter
+#         # RaceConfig = self._pystk.RaceConfig
+#         self.timeout = 1e10
+#         self.num_player = 2
+#         self.initial_ball_location=[0, 0]
+#         self.initial_ball_velocity=[0, 0]
+#         self.max_score=3
+#         self.race = None
+#         self.state = None
+#         self.record_fn = kwargs['record_fn']
+#         self.team1 = kwargs['team1'] # AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
+#         self.team2 = kwargs['team2'] # AIRunner() if args.team2 == 'AI' else TeamRunner(args.team2)
+#         # Irrelevant
+#         self.started = False
+#         self.AI = None
+#         self.info = {}
+#         self.reset()
+#
+#     def __del__(self):
+#         if hasattr(self, '_pystk') and self._pystk is not None and self._pystk.clean is not None:  # Don't ask why...
+#             self._pystk.clean()
+#
+#     def _make_config(self, team_id, is_ai, kart):
+#         PlayerConfig = self._pystk.PlayerConfig
+#         controller = PlayerConfig.Controller.AI_CONTROL if is_ai else PlayerConfig.Controller.PLAYER_CONTROL
+#         return PlayerConfig(controller=controller, team=team_id, kart=kart)
+#
+#     @classmethod
+#     def _r(cls, f):
+#         if hasattr(f, 'remote'):
+#             return f.remote
+#         if hasattr(f, '__call__'):
+#             if hasattr(f.__call__, 'remote'):
+#                 return f.__call__.remote
+#         return f
+#
+#     @staticmethod
+#     def _g(f):
+#         # from .remote import ray
+#         # #if ray is not None and isinstance(f, (ray.types.ObjectRef, ray._raylet.ObjectRef)):
+#         # if ray is not None and isinstance(f, (ray.ObjectRef, ray._raylet.ObjectRef)):
+#         #     return ray.get(f)
+#         return f
+#
+#     def _check(self, team1, team2, where, timeout):
+#         _, error, t1 = self._g(self._r(team1.info)())
+#         if error:
+#             raise MatchException([0, 3], 'other team crashed', 'crash during {}: {}'.format(where, error))
+#
+#         _, error, t2 = self._g(self._r(team2.info)())
+#         if error:
+#             raise MatchException([3, 0], 'crash during {}: {}'.format(where, error), 'other team crashed')
+#
+#         logging.debug('timeout {} <? {} {}'.format(timeout, t1, t2))
+#         return t1 < timeout, t2 < timeout
+#
+#     # TODO: implement a function to obtain the observation_space
+#     # def get_observation(self, action: list):
+#
+#
+#     def get_env_info(self) -> dict:
+#         info = {}
+#         return info
+#
+#     def get_info(self) -> dict:
+#         info = {}
+#         return info
+#
+#     def done(self) -> bool:
+#         """
+#         `playerKart.finish_time` > 0 when the kart finishes the race.
+#         Initially the finish time is < 0.
+#         """
+#         return self.playerKart.finish_time > 0
+#
+#     def reset(self, seed=None):
+#         self.truncated = False
+#         self.terminated = False
+#         RaceConfig = self._pystk.RaceConfig
+#
+#         logging.info('Creating teams')
+#
+#         # Start a new match
+#         self.t1_cars = self._g(self._r(self.team1.new_match)(0, self.num_player)) or ['tux']
+#         self.t2_cars = self._g(self._r(self.team2.new_match)(1, self.num_player)) or ['tux']
+#
+#         # Deal with crashes
+#         self.t1_can_act, self.t2_can_act = self._check(self.team1, self.team2, 'new_match', self.timeout)
+#
+#         # Setup the race config
+#         logging.info('Setting up race')
+#
+#         race_config = RaceConfig(track=TRACK_NAME, mode=RaceConfig.RaceMode.SOCCER, num_kart=2 * self.num_player)
+#         race_config.players.pop()
+#         for i in range(self.num_player):
+#             race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, self.t1_cars[i % len(self.t1_cars)]))
+#             race_config.players.append(self._make_config(1, hasattr(self.team2, 'is_ai') and self.team2.is_ai, self.t2_cars[i % len(self.t2_cars)]))
+#
+#         # Start the match
+#         logging.info('Starting race')
+#         self.race = self._pystk.Race(race_config)
+#         self.race.start()
+#
+#         self.state = self._pystk.WorldState()
+#         self.state.update()
+#         self.state.set_ball_location((self.initial_ball_location[0], 1, self.initial_ball_location[1]),
+#                                 (self.initial_ball_velocity[0], 0, self.initial_ball_velocity[1]))
+#
+#         # self.close()
+#
+#
+#     def step(self, action=None):
+#         # self.state.update()
+#         # Get the state
+#         team1_state = [to_native(p) for p in self.state.players[0::2]]
+#         team2_state = [to_native(p) for p in self.state.players[1::2]]
+#         soccer_state = to_native(self.state.soccer)
+#         # import pdb; pdb.set_trace()
+#         team1_images = team2_images = None
+#
+#         # Play the match (given the states)
+#         team1_actions_delayed = self._r(self.team1.act)(team1_state, team2_state, soccer_state)
+#         team2_actions_delayed = self._r(self.team2.act)(team2_state, team1_state, soccer_state)
+#
+#         # Wait for the actions to finish
+#         team1_actions = self._g(team1_actions_delayed) if self.t1_can_act else None
+#         team2_actions = self._g(team2_actions_delayed) if self.t2_can_act else None
+#
+#         new_t1_can_act, new_t2_can_act = self._check(self.team1, self.team2, 'act', self.timeout)
+#         if not new_t1_can_act and self.t1_can_act and self.verbose:
+#             print('Team 1 timed out')
+#         if not new_t2_can_act and self.t2_can_act and self.verbose:
+#             print('Team 2 timed out')
+#
+#         self.t1_can_act, self.t2_can_act = new_t1_can_act, new_t2_can_act
+#
+#         # Assemble the actions
+#         actions = []
+#         for i in range(self.num_player):
+#             a1 = team1_actions[i] if team1_actions is not None and i < len(team1_actions) else {}
+#             a2 = team2_actions[i] if team2_actions is not None and i < len(team2_actions) else {}
+#             actions.append(a1)
+#             actions.append(a2)
+#
+#         if self.record_fn:
+#             self._r(self.record_fn)(team1_state, team2_state, soccer_state=soccer_state, actions=actions,
+#                                 team1_images=team1_images, team2_images=team2_images)
+#
+#         logging.debug('  race.step  [score = {}]'.format(self.state.soccer.score))
+#
+#         if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_player):
+#             self.truncated = True
+#         if (sum(self.state.soccer.score) >= self.max_score):
+#             self.terminated = True
+#         if not (self.truncated or self.terminated):
+#             self.state.update()
+#
+#         self.observation = self.getObservation(team1_state)
+#         self.reward = self.getReward(self.state.soccer.score, self.observation)
+#         return self.observation, self.reward, self.terminated, self.truncated, self.info
+#
+#     def getObservation(self, state):
+#         # dummy - team1 state
+#         # import pdb; pdb.set_trace()
+#         # return np.array(state)
+#         return np.array([1.0]).astype(np.float32)
+#
+#     def getReward(self, scores, observation):
+#         # Team1: Ours (positive reward)
+#         # Team2: Opponent (negative reward)
+#         return (scores[0] - scores[1])
+#
+#
+#     def close(self):
+#         self.race.stop()
+#         del self.race
+#         pystk.clean()
 
-    :param graphicConfig: `pystk.GraphicsConfig` object specifying various graphic configs
-    :param raceConfig: `pystk.RaceConfig` object specifying the track and other configs
-    """
 
-    def __init__(self, logging_level=None, **kwargs):
-        # Copied from runner.py
-        import pystk
-        self._pystk = pystk
-        graphics_config = self._pystk.GraphicsConfig.none()
-        self._pystk.init(graphics_config)
-        if logging_level is not None:
-            logging.basicConfig(level=logging_level)
-        # TODO: Define the following parameter
-        # RaceConfig = self._pystk.RaceConfig
-        self.timeout = 1e10
-        self.num_player = 2
-        self.initial_ball_location=[0, 0]
-        self.initial_ball_velocity=[0, 0]
-        self.max_score=3
-        self.race = None
-        self.state = None
-        self.record_fn = kwargs['record_fn']
-        self.team1 = kwargs['team1'] # AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
-        self.team2 = kwargs['team2'] # AIRunner() if args.team2 == 'AI' else TeamRunner(args.team2)
-        # Irrelevant
-        self.started = False
-        self.AI = None
-        self.info = {}
-        self.reset()
-
-    def __del__(self):
-        if hasattr(self, '_pystk') and self._pystk is not None and self._pystk.clean is not None:  # Don't ask why...
-            self._pystk.clean()
-
-    def _make_config(self, team_id, is_ai, kart):
-        PlayerConfig = self._pystk.PlayerConfig
-        controller = PlayerConfig.Controller.AI_CONTROL if is_ai else PlayerConfig.Controller.PLAYER_CONTROL
-        return PlayerConfig(controller=controller, team=team_id, kart=kart)
-
-    @classmethod
-    def _r(cls, f):
-        if hasattr(f, 'remote'):
-            return f.remote
-        if hasattr(f, '__call__'):
-            if hasattr(f.__call__, 'remote'):
-                return f.__call__.remote
-        return f
-
-    @staticmethod
-    def _g(f):
-        # from .remote import ray
-        # #if ray is not None and isinstance(f, (ray.types.ObjectRef, ray._raylet.ObjectRef)):
-        # if ray is not None and isinstance(f, (ray.ObjectRef, ray._raylet.ObjectRef)):
-        #     return ray.get(f)
-        return f
-
-    def _check(self, team1, team2, where, timeout):
-        _, error, t1 = self._g(self._r(team1.info)())
-        if error:
-            raise MatchException([0, 3], 'other team crashed', 'crash during {}: {}'.format(where, error))
-
-        _, error, t2 = self._g(self._r(team2.info)())
-        if error:
-            raise MatchException([3, 0], 'crash during {}: {}'.format(where, error), 'other team crashed')
-
-        logging.debug('timeout {} <? {} {}'.format(timeout, t1, t2))
-        return t1 < timeout, t2 < timeout
-
-    # TODO: implement a function to obtain the observation_space
-    # def get_observation(self, action: list):
-        
-
-    def get_env_info(self) -> dict:
-        info = {}
-        return info
-
-    def get_info(self) -> dict:
-        info = {}
-        return info
-
-    def done(self) -> bool:
-        """
-        `playerKart.finish_time` > 0 when the kart finishes the race.
-        Initially the finish time is < 0.
-        """
-        return self.playerKart.finish_time > 0
-
-    def reset(self, seed=None):
-        self.truncated = False
-        self.terminated = False
-        RaceConfig = self._pystk.RaceConfig
-
-        logging.info('Creating teams')
-
-        # Start a new match
-        self.t1_cars = self._g(self._r(self.team1.new_match)(0, self.num_player)) or ['tux']
-        self.t2_cars = self._g(self._r(self.team2.new_match)(1, self.num_player)) or ['tux']
-
-        # Deal with crashes
-        self.t1_can_act, self.t2_can_act = self._check(self.team1, self.team2, 'new_match', self.timeout)
-
-        # Setup the race config
-        logging.info('Setting up race')
-
-        race_config = RaceConfig(track=TRACK_NAME, mode=RaceConfig.RaceMode.SOCCER, num_kart=2 * self.num_player)
-        race_config.players.pop()
-        for i in range(self.num_player):
-            race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, self.t1_cars[i % len(self.t1_cars)]))
-            race_config.players.append(self._make_config(1, hasattr(self.team2, 'is_ai') and self.team2.is_ai, self.t2_cars[i % len(self.t2_cars)]))
-
-        # Start the match
-        logging.info('Starting race')
-        self.race = self._pystk.Race(race_config)
-        self.race.start()
-
-        self.state = self._pystk.WorldState()
-        self.state.update()
-        self.state.set_ball_location((self.initial_ball_location[0], 1, self.initial_ball_location[1]),
-                                (self.initial_ball_velocity[0], 0, self.initial_ball_velocity[1]))
-
-        # self.close()
-    
-
-    def step(self, action=None):
-        # self.state.update()
-        # Get the state
-        team1_state = [to_native(p) for p in self.state.players[0::2]]
-        team2_state = [to_native(p) for p in self.state.players[1::2]]
-        soccer_state = to_native(self.state.soccer)
-        # import pdb; pdb.set_trace()
-        team1_images = team2_images = None
-
-        # Play the match (given the states)
-        team1_actions_delayed = self._r(self.team1.act)(team1_state, team2_state, soccer_state)
-        team2_actions_delayed = self._r(self.team2.act)(team2_state, team1_state, soccer_state)
-
-        # Wait for the actions to finish
-        team1_actions = self._g(team1_actions_delayed) if self.t1_can_act else None
-        team2_actions = self._g(team2_actions_delayed) if self.t2_can_act else None
-
-        new_t1_can_act, new_t2_can_act = self._check(self.team1, self.team2, 'act', self.timeout)
-        if not new_t1_can_act and self.t1_can_act and self.verbose:
-            print('Team 1 timed out')
-        if not new_t2_can_act and self.t2_can_act and self.verbose:
-            print('Team 2 timed out')
-
-        self.t1_can_act, self.t2_can_act = new_t1_can_act, new_t2_can_act
-
-        # Assemble the actions
-        actions = []
-        for i in range(self.num_player):
-            a1 = team1_actions[i] if team1_actions is not None and i < len(team1_actions) else {}
-            a2 = team2_actions[i] if team2_actions is not None and i < len(team2_actions) else {}
-            actions.append(a1)
-            actions.append(a2)
-
-        if self.record_fn:
-            self._r(self.record_fn)(team1_state, team2_state, soccer_state=soccer_state, actions=actions,
-                                team1_images=team1_images, team2_images=team2_images)
-
-        logging.debug('  race.step  [score = {}]'.format(self.state.soccer.score))
-
-        if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_player):
-            self.truncated = True
-        if (sum(self.state.soccer.score) >= self.max_score):
-            self.terminated = True        
-        if not (self.truncated or self.terminated):
-            self.state.update()
-
-        self.observation = self.getObservation(team1_state) 
-        self.reward = self.getReward(self.state.soccer.score, self.observation)  
-        return self.observation, self.reward, self.terminated, self.truncated, self.info
-
-    def getObservation(self, state):
-        # dummy - team1 state
-        # import pdb; pdb.set_trace()
-        # return np.array(state)
-        return np.array([1.0]).astype(np.float32)
-
-    def getReward(self, scores, observation):
-        # Team1: Ours (positive reward)
-        # Team2: Opponent (negative reward)
-        return (scores[0] - scores[1])
-        
-
-    def close(self):
-        self.race.stop()
-        del self.race
-        pystk.clean()
-
+class DummyTeam():
+    def __init__(self, num_players, team_id):
+        self.num_players = num_players
+        self.team_id = team_id
+    def new_match(self):
+        return ['tux'] * self.num_players
+    def act(self, action):
+        return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
+    def reset(self):
+        pass
 
 class IceHockeyEnv(gymnasium.Env):
     """
@@ -255,58 +270,92 @@ class IceHockeyEnv(gymnasium.Env):
         -----------------------------------------------------------------
     """
 
-    def __init__(self, ):
+    def __init__(self, args, logging_level=None):
         super(IceHockeyEnv, self).__init__()
-        # team1 = AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
-        # team2 = AIRunner() if args.team1 == 'AI' else TeamRunner(args.team1)
-        recorder = VideoRecorder("yay.mp4")
-        team1, team2 = AIRunner(), AIRunner()
-        # recorder = None 
-        kwargs = {'team1':team1,'team2': team2, 'record_fn': recorder}
-        env=IceHockeyAgent(**kwargs)
-        self.env = env
-        # action space: {acceleration, brake, drift, fire, nitro, rescue, steer}
-        self.action_space = spaces.Dict(acceleration=spaces.Discrete(2), brake=spaces.Discrete(2), 
-                                             drift=spaces.Discrete(2), fire=spaces.Discrete(2), 
-                                             nitro=spaces.Discrete(2), rescue=spaces.Discrete(2), 
-                                             steer=spaces.Discrete(2))
-        # observation space: dummy
-        # TODO: Check the spaces type for observation space 
-        self.observation_space = spaces.Box(
-            low=0, high=1, shape=(1,), dtype=np.float32
-        )
+        self._pystk = pystk
+        self._pystk.init(self._pystk.GraphicsConfig.none())
+        if logging_level is not None:
+            logging.basicConfig(level=logging_level)
+        self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
+
+        self.action_space = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32)
+        # TODO Max distance
+        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([100]), dtype=np.float32)
+
+        # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
+        # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
+        self.timeout = 1e10
+        self.max_score = 3
+        self.num_players = 1
+        self.team1 = DummyTeam(self.num_players, 0)
+
+        self.info = {}
+        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
+        self.race_config.players.pop()
+        for i in range(self.num_players):
+            # self.race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, ['tux']))
+            self.race_config.players.append(self._make_config(0, False, 'tux'))
+        # self.reset()
+
+    def _make_config(self, team_id, is_ai, kart):
+        # TODO if not AI
+        PlayerConfig = self._pystk.PlayerConfig
+        controller = PlayerConfig.Controller.AI_CONTROL if is_ai else PlayerConfig.Controller.PLAYER_CONTROL
+        return PlayerConfig(controller=controller, team=team_id, kart=kart)
 
     def step(self, action):
-        # observation, reward, terminated, truncated, info
-        return self.env.step(action)
-        # # reward = 1.0
-        # observation, reward, terminated, truncated, info = self.env.step(action)
-        # # TODO: Fetch the observation space (Is it state space)
-        # observation = np.array([1.0]).astype(np.float32) 
-        # return observation, reward, terminated, truncated, info
+        #pystk
+        team1_state = [to_native(p) for p in self.state.players[0::2]]
+        team2_state = [to_native(p) for p in self.state.players[1::2]]
+        soccer_state = to_native(self.state.soccer)
+        logging.info('calling agent')
+        team1_actions = self.team1.act(action)
+        # team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
 
+        # TODO check for error in info and raise MatchException
+        # TODO check for timeout
+
+        if self.recorder:
+            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=team1_actions,team1_images=None, team2_images=None)
+
+        if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
+            self.truncated = True
+        if (sum(self.state.soccer.score) >= self.max_score):
+            self.terminated = True
+        if not (self.truncated or self.terminated):
+            self.state.update()
+
+        logging.info('state updated, calculating reward')
+        team1_state_next = [to_native(p) for p in self.state.players[0::2]]
+        team2_state_next = [to_native(p) for p in self.state.players[1::2]]
+        soccer_state = to_native(self.state.soccer)
+        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
+
+        reward = self.reward.step(p_features)
+        logging.info(f'returning new state and reward {reward}')
+        return np.array(p_features), reward, self.terminated, self.truncated, self.info
 
     def reset(self, seed=1, options=None):
-        # Calling the reset the function of parent class (gymnasium.Env)
-        super().reset(seed=seed, options=options)
-        # Output of reset function: observation, info
-        # TODO later: 
-        # Check if we need observation from reset function
-        # Check if we need info for monitoring and debugging
-        return np.array([1.0]).astype(np.float32), {}
+        logging.info('Resetting')
+        self.reward = Reward()
+        self.truncated = False
+        self.terminated = False
+        logging.info('Starting new race')
+        self.race = self._pystk.Race(self.race_config)
+        self.race.start()
+        self.state = self._pystk.WorldState()
+        self.state.update() # TODO need to call this here?
 
-    # TODO: Implement get_info function (required for debugging)
-    def get_info(self):
-        return self.env.get_info()
+        team1_state_next = [to_native(p) for p in self.state.players[0::2]]
+        team2_state_next = [to_native(p) for p in self.state.players[1::2]]
+        soccer_state = to_native(self.state.soccer)
+        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
+        return np.array(p_features), self.info
 
-    # TODO: Implement get_env_info function (required for debugging)
-    def get_env_info(self):
-        return self.env.get_env_info()
-
-    # TODO: Use the commented logic to close the environment (copied from runner.py)
-    # if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_player) or sum(self.state.soccer.score) >= self.max_score:
     def close(self):
-        self.env.close()
+        self.race.stop()
+        del self.race
+        self._pystk.clean()
 
 
 
