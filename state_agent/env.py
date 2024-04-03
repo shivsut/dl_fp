@@ -247,7 +247,7 @@ class DummyTeam():
     def new_match(self):
         return ['tux'] * self.num_players
     def act(self, action):
-        return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
+        return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.0 else False, nitro=False, drift=False, rescue=False, fire=False)]
     def reset(self):
         pass
 
@@ -272,15 +272,17 @@ class IceHockeyEnv(gymnasium.Env):
 
     def __init__(self, args, logging_level=None):
         super(IceHockeyEnv, self).__init__()
+        self.args = args
         self._pystk = pystk
         self._pystk.init(self._pystk.GraphicsConfig.none())
         if logging_level is not None:
             logging.basicConfig(level=logging_level)
         self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
 
-        self.action_space = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 0.1]), dtype=np.float32)
+        # self.action_space = spaces.Dict(accel_and_steer = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32),brake = spaces.Discrete(n = 2, start=0))
         # TODO Max distance
-        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([100]), dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([90]), dtype=np.float32)
 
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
@@ -296,6 +298,7 @@ class IceHockeyEnv(gymnasium.Env):
             # self.race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, ['tux']))
             self.race_config.players.append(self._make_config(0, False, 'tux'))
         # self.reset()
+        self.race = self._pystk.Race(self.race_config)
 
     def _make_config(self, team_id, is_ai, kart):
         # TODO if not AI
@@ -337,11 +340,12 @@ class IceHockeyEnv(gymnasium.Env):
 
     def reset(self, seed=1, options=None):
         logging.info('Resetting')
+        # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
         self.reward = Reward()
         self.truncated = False
         self.terminated = False
         logging.info('Starting new race')
-        self.race = self._pystk.Race(self.race_config)
+        self.race.stop()
         self.race.start()
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
