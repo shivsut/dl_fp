@@ -247,7 +247,8 @@ class DummyTeam():
     def new_match(self):
         return ['tux'] * self.num_players
     def act(self, action):
-        return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.05 else False, nitro=True if action[3] > 0.05 else False, drift=True if action[4] > 0.05 else False, rescue=False, fire=False)]
+        # return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.05 else False, nitro=True if action[3] > 0.05 else False, drift=True if action[4] > 0.05 else False, rescue=False, fire=False)]
+        return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
         # return [dict(acceleration=action[0]/10, steer=action[1]/100, brake=True if action[2] >0 else False, nitro=True if action[3] >0 else False, drift=True if action[4] >0 else False, rescue=False, fire=False)]
     def reset(self):
         pass
@@ -280,7 +281,8 @@ class IceHockeyEnv(gymnasium.Env):
             logging.basicConfig(level=logging_level)
         self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
         # self.action_space = spaces.MultiDiscrete(nvec=[10, 200, 2, 2, 2], start=[0, -100, 0, 0, 0])
-        self.action_space = spaces.Box(low=np.array([0, -1, 0, 0, 0]), high=np.array([1, 1, 0.1, 0.1, 0.1]), dtype=np.float32)
+        # self.action_space = spaces.Box(low=np.array([0, -1, 0, 0, 0]), high=np.array([1, 1, 0.1, 0.1, 0.1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, -1,]), high=np.array([1, 1,]), dtype=np.float32)
         # self.action_space = spaces.Dict(accel_and_steer = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32),brake = spaces.Discrete(n = 2, start=0))
         # TODO Max distance
         self.observation_space = spaces.Box(low=np.array([0]), high=np.array([90]), dtype=np.float32)
@@ -337,9 +339,11 @@ class IceHockeyEnv(gymnasium.Env):
 
         reward = self.reward.step(p_features)
         logging.info(f'returning new state and reward {reward}')
+        # print(f"reward: {reward}")
         return np.array(p_features), reward, self.terminated, self.truncated, self.info
 
     def reset(self, seed=1, options=None):
+        # super().reset(seed=seed)
         logging.info('Resetting')
         # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
         self.reward = Reward()
