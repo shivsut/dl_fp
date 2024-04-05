@@ -274,12 +274,20 @@ class IceHockeyEnv(gymnasium.Env):
 
     def __init__(self, args, logging_level=None):
         super(IceHockeyEnv, self).__init__()
+        self.do_init = True
         self.args = args
+        self.logging_level = logging_level
+        self.init()
+
+    def init(self):
+        if not self.do_init:
+            return
+        self.do_init = False
         self._pystk = pystk
         self._pystk.init(self._pystk.GraphicsConfig.none())
-        if logging_level is not None:
-            logging.basicConfig(level=logging_level)
-        self.recorder = VideoRecorder(args.record_fn) if args.record_fn else None
+        if self.logging_level is not None:
+            logging.basicConfig(level=self.logging_level)
+        self.recorder = VideoRecorder(self.args.record_fn) if self.args.record_fn else None
         # self.action_space = spaces.MultiDiscrete(nvec=[10, 200, 2, 2, 2], start=[0, -100, 0, 0, 0])
         # self.action_space = spaces.Box(low=np.array([0, -1, 0, 0, 0]), high=np.array([1, 1, 0.1, 0.1, 0.1]), dtype=np.float32)
         self.action_space = spaces.Box(low=np.array([0, -1,]), high=np.array([1, 1,]), dtype=np.float32)
@@ -343,6 +351,7 @@ class IceHockeyEnv(gymnasium.Env):
         return np.array(p_features), reward, self.terminated, self.truncated, self.info
 
     def reset(self, seed=1, options=None):
+        self.init()
         # super().reset(seed=seed)
         logging.info('Resetting')
         # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
