@@ -21,12 +21,13 @@ if __name__ == '__main__':
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=1000)
     parser.add_argument('-m', '--model_name', default='hockey')
     parser.add_argument('-d', '--deterministic', action='store_true')
+    parser.add_argument( '--tensor_log', action='store_true')
 
     args = parser.parse_args()
     if args.do_train:
         from stable_baselines3.common.monitor import Monitor
         envs = SubprocVecEnv([lambda : Monitor(IceHockeyEnv(args, logging_level='ERROR')) for _ in range(args.nenv)])
-        model = PPO("MlpPolicy", envs, verbose=1)
+        model = PPO("MlpPolicy", envs, verbose=1, tensorboard_log='./log/' if args.tensor_log else None)
         model.learn(total_timesteps=args.time_steps)
         model.save(args.model_name)
     else:
