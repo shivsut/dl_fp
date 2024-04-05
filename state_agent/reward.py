@@ -6,6 +6,9 @@ class Reward:
     def __init__(self):
         self.prev_reward = 0
         self.not_first = False
+        self.goal_to_ball_dist_hyp = 10
+        self.kart_ball_goal_align_hyp = 0.25
+        self.kart_ball_dist_hyp = 0.25
     
     def funcV1(self, p_states):
         """
@@ -32,13 +35,14 @@ class Reward:
 
     def rewardStatesV2(self, p_states):
         # [kart_to_puck_dist, alignment, goal_dist, puck_and_goal_distance]
-        reward = 0
+        state_quality = 0
+        player_quality = 0
         # Minimize distance b/w cart and puck
         # import pdb; pdb.set_trace()
-        reward += 100 * np.exp(-p_states[0])
-        # Maximize alignment  
-        reward += 0.001 * (-p_states[1])
+        state_quality = self.goal_to_ball_dist_hyp * (np.exp(-p_states[3]))
+        player_quality = (self.kart_ball_goal_align_hyp * p_states[1]) + (self.kart_ball_dist_hyp * np.exp(-p_states[0]))
 
+        reward = state_quality + player_quality
         return reward
 
     def funcV2(self, p_states):
