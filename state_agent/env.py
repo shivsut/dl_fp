@@ -18,8 +18,7 @@ import torch
 import pystk
 import numpy as np
 from .reward import Reward
-from .extract_state import extract_state_train_p1, extract_state_train
-from .extract_state import extract_state_train_p2
+from .extract_state import extract_state_train
 
 def to_native(o):
     # Super obnoxious way to hide pystk
@@ -293,7 +292,8 @@ class IceHockeyEnv(gymnasium.Env):
         self.action_space = spaces.Box(low=np.array([0, -1,]), high=np.array([1, 1,]), dtype=np.float32)
         # self.action_space = spaces.Dict(accel_and_steer = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32),brake = spaces.Discrete(n = 2, start=0))
         # TODO Max distance
-        self.observation_space = spaces.Box(low=np.array([0]), high=np.array([90]), dtype=np.float32)
+        # [kart_to_puck_dist, alignment, goal_dist, puck_and_goal_distance]
+        self.observation_space = spaces.Box(low=np.array([0, -1, 0, 0]), high=np.array([100, 1, 100, 100]), dtype=np.float32)
 
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
@@ -368,6 +368,7 @@ class IceHockeyEnv(gymnasium.Env):
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
         p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
+        print(p_features)
         return np.array(p_features), self.info
 
     def close(self):
