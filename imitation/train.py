@@ -56,7 +56,7 @@ with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
         bc_trainer=bc_trainer,
         rng=rng,
     )
-    dagger_trainer.train(8_000)
+    dagger_trainer.train(1000)
 
 dagger_trainer.save_trainer()
 reward, _ = evaluate_policy(dagger_trainer.policy, env, 10)

@@ -69,8 +69,8 @@ def extract_state_train(p_states, opponent_state, soccer_state, team_id):
     kart_to_puck_angle_difference = limit_period((kart_angle - kart_to_puck_angle)/np.pi)
 
     # features of opponents
-    opponent_center0 = torch.tensor(opponent_state[0]['kart']['location'], dtype=torch.float32)[[0, 2]] if len(opponent_state) else torch.tensor((0,0), dtype=torch.float32)
-    opponent_center1 = torch.tensor(opponent_state[1]['kart']['location'], dtype=torch.float32)[[0, 2]] if len(opponent_state) else torch.tensor((0,0), dtype=torch.float32)
+    opponent_center0 = torch.tensor(opponent_state[0]['kart']['location'], dtype=torch.float32)[[0, 2]] if len(opponent_state) else torch.tensor((10,0), dtype=torch.float32)
+    opponent_center1 = torch.tensor(opponent_state[1]['kart']['location'], dtype=torch.float32)[[0, 2]] if len(opponent_state) else torch.tensor((10,0), dtype=torch.float32)
 
     kart_to_opponent0 = (opponent_center0 - kart_center) / torch.norm(opponent_center0-kart_center)
     kart_to_opponent1 = (opponent_center1 - kart_center) / torch.norm(opponent_center1-kart_center)
