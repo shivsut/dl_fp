@@ -137,7 +137,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0)
+        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0).flatten().tolist()
 
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
@@ -160,9 +160,9 @@ class IceHockeyEnvImitation(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0)
+        p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
         # print(p_features)
-        return np.array(p_features), self.info
+        return np.array(p_features)
 
     def close(self):
         self.race.stop()
