@@ -1,4 +1,5 @@
 import tempfile
+from argparse import ArgumentParser
 
 import numpy as np
 import gymnasium as gym
@@ -10,17 +11,33 @@ from imitation.algorithms.dagger import SimpleDAggerTrainer
 from imitation.policies.serialize import load_policy
 from imitation.util.util import make_vec_env
 
+from imitation.reward_env import IceHockeyEnvImitation
+
+parser = ArgumentParser()
+parser.add_argument('-n', '--nenv', type=int, default=1)
+parser.add_argument('-r', '--record_fn', default=None)
+parser.add_argument('--do_train', action='store_true')
+parser.add_argument('-t', '--time_steps', type=int, default=100000)
+parser.add_argument('-ti', '--time_steps_infer', type=int, default=1000)
+parser.add_argument('-m', '--model_name', default='hockey')
+parser.add_argument('-d', '--deterministic', action='store_true')
+parser.add_argument('--tensor_log', action='store_true')
+parser.add_argument('--debug_mode', action='store_true')
+
 rng = np.random.default_rng(0)
-env = make_vec_env(
-    "seals:seals/CartPole-v0",
-    rng=rng,
-)
-expert = load_policy(
-    "ppo-huggingface",
-    organization="HumanCompatibleAI",
-    env_name="seals-CartPole-v0",
-    venv=env,
-)
+# env = make_vec_env(
+#     "seals:seals/CartPole-v0",
+#     rng=rng,
+# )
+args = parser.parse_args()
+env = IceHockeyEnvImitation(args, logging_level='ERROR')
+# expert = IceHockeyEnv()
+# expert = load_policy(
+#     "ppo-huggingface",
+#     organization="HumanCompatibleAI",
+#     env_name="seals-CartPole-v0",
+#     venv=env,
+# )
 
 bc_trainer = bc.BC(
     observation_space=env.observation_space,
