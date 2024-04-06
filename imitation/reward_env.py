@@ -54,6 +54,7 @@ def extract_state_train(p_states, opponent_state, soccer_state, team_id):
         goal_line_center[0], goal_line_center[1], puck_to_goal_line_angle, kart_to_puck_angle_difference,
         kart_to_opponent0_angle_difference, kart_to_opponent1_angle_difference,
         kart_to_goal_line_angle_difference], dtype=torch.float32)
+    return features
 
 RunnerInfo = namedtuple('RunnerInfo', ['agent_type', 'error', 'total_act_time'])
 
