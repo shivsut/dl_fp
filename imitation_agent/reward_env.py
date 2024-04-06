@@ -194,14 +194,20 @@ class IceHockeyEnvImitation(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = extract_state_train(team1_state_next, team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
 
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
         # print(f"reward: {reward}")
         return np.array(p_features), 0, self.terminated and self.truncated, self.info
 
+    def step_async(self, action):
+        self.async_res= self.step(action)
+    def step_wait(self):
+        return self.async_res
+
     def reset(self, seed=1, options=None):
+        self.async_res = None
         # super().reset(seed=seed)
         logging.info('Resetting')
         # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
