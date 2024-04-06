@@ -95,6 +95,10 @@ opponent_center1[0] -  0 to 100 (should be less) p2_x
 opponent_center1[1] -  0 to 100 (should be less) p2_y
 kart_to_opponent0_angle - -pi to pi
 kart_to_opponent1_angle - -pi to pi
+goal_line_center - our goal
+goal_line_center - their goal
+puck_to_goal_line_angle - -pi to pi 
+kart_to_puck_angle_difference - -1 to 1
 kart_to_opponent0_angle_difference - -1 to 1
 kart_to_opponent1_angle_difference - -1 to 1
 kart_to_goal_line_angle_difference - -1 to 1

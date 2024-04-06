@@ -39,8 +39,36 @@ def to_native(o):
             return {k: _to(getattr(v, k)) for k in dir(v) if k[0] != '_'}
     return _to(o)
 
-
 class IceHockeyEnvImitation(gymnasium.Env):
+    def __init__(self):
+        pi = 3.2
+        super(IceHockeyEnvImitation, self).__init__()
+        #
+        self.action_space = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32)
+        # kart_center[0] - 0 to 100 p1_x
+        # kart_center[1] - 0 to 100 p2_y
+        # kart_angle - -pi to pi
+        # kart_to_puck_angle - -pi to pi
+        # opponent_center0[0] - 0 to 100(should be less) p1_x
+        # opponent_center0[1] - 0 to 100(should be less) p1_y
+        # opponent_center1[0] - 0 to 100(should be less) p2_x
+        # opponent_center1[1] - 0 to 100(should  be less) p2_y
+        # goal_line_center - our goal x
+        # goal_line_center - our  goal y
+        # puck_to_goal_line_angle - -pi to pi
+        # kart_to_puck_angle_difference - - 1 to 1
+        # kart_to_opponent0_angle - -pi to pi
+        # kart_to_opponent1_angle - -pi to pi
+        # kart_to_opponent0_angle_difference - -1 to 1
+        # kart_to_opponent1_angle_difference - -1 to 1
+        self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, 0, 0, 0, 0, -pi, -1, -pi, -pi, -1, -1]), high=np.array([100, 100, pi, pi, 100, 100, 100, 100, 60, 60, -pi, 1, pi, pi, 1, 1]),dtype=np.float32)
+
+    def step(self, action):
+        raise Exception("Not Implemented")
+
+    def reset(self,seed=1, options=None):
+        raise Exception("Not Implemented")
+class IceHockeyEnvImitation2(gymnasium.Env):
     """
     Observation:
         Image of shape `self.observation_shape`.
@@ -60,7 +88,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
     """
 
     def __init__(self, args, logging_level=None):
-        super(IceHockeyEnvImitation, self).__init__()
+        super(IceHockeyEnvImitation2, self).__init__()
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
