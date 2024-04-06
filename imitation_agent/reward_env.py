@@ -199,7 +199,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
         # print(f"reward: {reward}")
-        return np.array(p_features), 0, self.terminated and self.truncated, self.info
+        return np.array(p_features), np.array([0], dtype=float), np.array([1 if self.terminated and self.truncated else 0], dtype=int), np.array([""], dtype=str)
 
     def step_async(self, action):
         self.async_res= self.step(action)
