@@ -71,7 +71,7 @@ class IceHockeyEnv(BasePolicy):
 
     #     pass 
 
-    def predict(
+    def _predict(
         self,
         observation: Union[np.ndarray, Dict[str, np.ndarray]],
         state: Optional[Tuple[np.ndarray, ...]] = None,

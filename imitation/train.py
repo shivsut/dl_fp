@@ -11,7 +11,9 @@ from imitation.algorithms.dagger import SimpleDAggerTrainer
 from imitation.policies.serialize import load_policy
 from imitation.util.util import make_vec_env
 
-from imitation.reward_env import IceHockeyEnvImitation
+from reward_env import IceHockeyEnvImitation
+
+from policy_env import IceHockeyEnv
 
 parser = ArgumentParser()
 parser.add_argument('-n', '--nenv', type=int, default=1)
@@ -31,6 +33,7 @@ rng = np.random.default_rng(0)
 # )
 args = parser.parse_args()
 env = IceHockeyEnvImitation(args, logging_level='ERROR')
+expert = IceHockeyEnv(env.observation_space, env.action_space)
 # expert = IceHockeyEnv()
 # expert = load_policy(
 #     "ppo-huggingface",

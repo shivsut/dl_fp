@@ -8,7 +8,7 @@ import numpy as np
 from collections import namedtuple
 
 from state_agent.extract_state import extract_state_train
-from ..tournament.utils import VideoRecorder
+from utils import VideoRecorder
 
 TRACK_NAME = 'icy_soccer_field'
 MAX_FRAMES = 1000
@@ -56,10 +56,10 @@ class DummyTeam():
 
 class IceHockeyEnvImitation(gymnasium.Env):
     def __init__(self, args, logging_level=None):
+        self.num_envs =1
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
-        self.init()
         pi = 3.2
         super(IceHockeyEnvImitation, self).__init__()
         #
