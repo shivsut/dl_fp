@@ -190,6 +190,8 @@ class IceHockeyEnvImitation(gymnasium.Env):
             self.terminated = True
         if not (self.truncated or self.terminated):
             self.state.update()
+        else:
+            self.num_envs = 0
 
         logging.info('state updated, calculating reward')
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
@@ -211,6 +213,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
 
     def reset(self, seed=1, options=None):
         self.async_res = None
+        self.num_envs = 1
         # super().reset(seed=seed)
         logging.info('Resetting')
         # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
