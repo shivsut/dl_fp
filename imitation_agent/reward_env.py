@@ -114,7 +114,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         pi = 3.2
         super(IceHockeyEnvImitation, self).__init__()
         #
-        self.action_space = spaces.Box(low=np.array([0, -1]), high=np.array([1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
         # kart_center[0] - 0 to 100 p1_x
         # kart_center[1] - 0 to 100 p2_y
         # kart_angle - -pi to pi
@@ -202,7 +202,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         # print(f"reward: {reward}")
         print (p_features)
         # self.terminated = True
-        return  np.array([np.array(p_features)]), np.array([np.array([0], dtype=float)]), np.array([np.array([True if (self.terminated or self.truncated) else False], dtype=bool)]), [{'terminal_observation': np.array(p_features)}]
+        return  np.array([np.array(p_features)]), np.array([np.array(0, dtype=float)]), np.array([np.array(True if (self.terminated or self.truncated) else False, dtype=bool)]), [{'terminal_observation': np.array(p_features)}]
 
     def step_async(self, action):
         self.async_res= self.step(action)
