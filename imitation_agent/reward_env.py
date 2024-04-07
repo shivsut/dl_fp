@@ -200,7 +200,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
         # print(f"reward: {reward}")
-        print (p_features)
+        # print (p_features)
         # self.terminated = True
         return  np.array([np.array(p_features)]), np.array([np.array(0, dtype=float)]), np.array([np.array(True if (self.terminated or self.truncated) else False, dtype=bool)]), [{'terminal_observation': np.array(p_features)}]
 

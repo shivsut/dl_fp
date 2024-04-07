@@ -57,7 +57,7 @@ with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
         rng=rng,
     )
     print ('training')
-    dagger_trainer.train(1)
+    dagger_trainer.train(100)
     print('done')
 
 # dagger_trainer.save_trainer()
