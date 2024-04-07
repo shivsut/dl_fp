@@ -27,10 +27,10 @@ parser.add_argument('--tensor_log', action='store_true')
 parser.add_argument('--debug_mode', action='store_true')
 
 rng = np.random.default_rng(0)
-# env = make_vec_env(
-#     "seals:seals/CartPole-v0",
-#     rng=rng,
-# )
+env = make_vec_env(
+    "seals:seals/CartPole-v0",
+    rng=rng,
+)
 args = parser.parse_args()
 env = IceHockeyEnvImitation(args, logging_level='ERROR')
 expert = IceHockeyEnv(env.observation_space, env.action_space)
@@ -57,9 +57,12 @@ with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
         rng=rng,
     )
     print ('training')
-    dagger_trainer.train(100)
+    dagger_trainer.train(100,
+                         rollout_round_min_timesteps=0,
+                         rollout_round_min_episodes=1
+                         )
     print('done')
 
-# dagger_trainer.save_trainer()
+# # dagger_trainer.save_trainer()
 # reward, _ = evaluate_policy(dagger_trainer.policy, env, 10)
 # print("Reward:", reward)
