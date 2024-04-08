@@ -26,11 +26,11 @@ class IceHockeyEnv(BasePolicy):
         
         self.num_players = num_players
         self.team = team
-        self.model = torch.jit.load(path.join(path.dirname(path.abspath(__file__)), 'yann_agent.pt'))
+        self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), 'yann_agent.pt'))
 
     def _predict(self, observation, deterministic: bool = False):
         actions = self.model(observation)
-        return [torch.tensor(actions)]
+        return torch.tensor(actions)
 
     def predict(
         self,
@@ -42,7 +42,11 @@ class IceHockeyEnv(BasePolicy):
 
         # Convert the observation to tensor
         observation = torch.tensor(observation, dtype=torch.float32)
-        actions = self._predict(observation)
+        # TODO optimise
+        actions = []
+        for i in range(len(observation)):
+            obs = observation[i]
+            actions.append(self._predict(obs))
         return actions, state
         
         

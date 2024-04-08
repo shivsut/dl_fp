@@ -62,15 +62,15 @@ if __name__ == '__main__':
             rng=rng,
         )
         print ('training')
-        dagger_trainer.train(1,
+        dagger_trainer.train(100,
                              rollout_round_min_timesteps=0,
                              rollout_round_min_episodes=1
                              )
-        print('done')
+        print('training done, evaluating')
         dagger_trainer.policy.save("./saved_model/imitation.pt")
 
     args.record_fn='infer.mp4'
-    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(args.nenv)])
-    envs_eval = envs
-    reward, _ = evaluate_policy(dagger_trainer.policy, envs_eval, 1)
+    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(1)])
+    # envs_eval = envs
+    reward, _ = evaluate_policy(dagger_trainer.policy, envs_eval, 2)
     print("Reward:", reward)

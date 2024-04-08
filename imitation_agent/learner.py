@@ -150,6 +150,8 @@ class IceHockeyLearner(gymnasium.Env):
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
+        self.max_timestep = 500
+        self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
         self.team1 = DummyTeam(self.num_players, 0)
@@ -170,6 +172,7 @@ class IceHockeyLearner(gymnasium.Env):
 
     def step(self, action):
         #pystk
+        self.current_timestep += 1
         team1_state = [to_native(p) for p in self.state.players[0::2]]
         team2_state = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
@@ -185,7 +188,7 @@ class IceHockeyLearner(gymnasium.Env):
 
         if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
             self.truncated = True
-        if (sum(self.state.soccer.score) >= self.max_score):
+        if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
             self.terminated = True
         if not (self.truncated or self.terminated):
             self.state.update()
@@ -211,6 +214,7 @@ class IceHockeyLearner(gymnasium.Env):
         return self.async_res
 
     def reset(self, seed=1, options=None):
+        self.current_timestep = 0
         self.async_res = None
         self.num_envs = 1
         # super().reset(seed=seed)
