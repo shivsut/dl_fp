@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 import gymnasium as gym
+from imitation.util.logger import HierarchicalLogger
 from stable_baselines3.common.evaluation import evaluate_policy
 import imitation.data.rollout as rollout
 
@@ -10,6 +11,7 @@ from imitation.algorithms import bc
 from imitation.algorithms.dagger import SimpleDAggerTrainer
 from imitation.policies.serialize import load_policy
 from imitation.util.util import make_vec_env
+from stable_baselines3.common.logger import Logger, CSVOutputFormat
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
@@ -50,6 +52,7 @@ if __name__ == '__main__':
     bc_trainer = bc.BC(
         observation_space=envs.observation_space,
         action_space=envs.action_space,
+        custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat('out2.csv')])),
         rng=rng,
     )
     with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
@@ -58,11 +61,12 @@ if __name__ == '__main__':
             venv=envs,
             scratch_dir=tmpdir,
             expert_policy=expert,
-            bc_trainer=bc_trainer,
             rng=rng,
+            bc_trainer=bc_trainer,
+            custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat('out1.csv')])),
         )
         print ('training')
-        dagger_trainer.train(100,
+        dagger_trainer.train(5000,
                              rollout_round_min_timesteps=0,
                              rollout_round_min_episodes=1
                              )

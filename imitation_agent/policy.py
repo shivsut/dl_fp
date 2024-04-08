@@ -47,6 +47,7 @@ class IceHockeyEnv(BasePolicy):
         for i in range(len(observation)):
             obs = observation[i]
             actions.append(self._predict(obs))
+        # print (actions[0])
         return actions, state
         
         
