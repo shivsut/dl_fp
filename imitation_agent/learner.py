@@ -29,10 +29,12 @@ def extract_state_train(pstate, opponent_state, soccer_state, team_id):
     kart_to_puck_angle_difference = limit_period((kart_angle - kart_to_puck_angle)/np.pi)
 
     # TODO: Dummy values for opponent states
-    opponent_center0 = torch.tensor([0, 0], dtype=torch.float32)
-    opponent_center1 = torch.tensor([0, 0], dtype=torch.float32)
+    # opponent_center0 = torch.tensor([0, 0], dtype=torch.float32)
+    # opponent_center1 = torch.tensor([0, 0], dtype=torch.float32)
     # opponent_center0 = torch.tensor(opponent_state[0]['kart']['location'], dtype=torch.float32)[[0, 2]]
     # opponent_center1 = torch.tensor(opponent_state[1]['kart']['location'], dtype=torch.float32)[[0, 2]]
+    opponent_center0 = torch.tensor(opponent_state['kart']['location'], dtype=torch.float32)[[0, 2]] if len(opponent_state) else torch.tensor((10,0), dtype=torch.float32)
+    opponent_center1 = torch.tensor((10,0), dtype=torch.float32)
 
     kart_to_opponent0 = (opponent_center0 - kart_center) / torch.norm(opponent_center0-kart_center)
     kart_to_opponent1 = (opponent_center1 - kart_center) / torch.norm(opponent_center1-kart_center)
@@ -160,8 +162,8 @@ class IceHockeyLearner(gymnasium.Env):
         self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
         self.race_config.players.pop()
         for i in range(self.num_players):
-            # self.race_config.players.append(self._make_config(0, hasattr(self.team1, 'is_ai') and self.team1.is_ai, ['tux']))
             self.race_config.players.append(self._make_config(0, False, 'tux'))
+            self.race_config.players.append(self._make_config(1, True, 'tux'))
         # self.reset()
         self.race = self._pystk.Race(self.race_config)
 
@@ -199,7 +201,7 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
 
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
@@ -232,7 +234,7 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
         # print(p_features)
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
