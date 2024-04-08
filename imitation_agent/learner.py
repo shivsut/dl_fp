@@ -98,21 +98,20 @@ class DummyTeam():
     def new_match(self):
         return ['tux'] * self.num_players
     def act(self, action):
-        action = action[0]
         # return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.05 else False, nitro=True if action[3] > 0.05 else False, drift=True if action[4] > 0.05 else False, rescue=False, fire=False)]
         return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
         # return [dict(acceleration=action[0]/10, steer=action[1]/100, brake=True if action[2] >0 else False, nitro=True if action[3] >0 else False, drift=True if action[4] >0 else False, rescue=False, fire=False)]
     def reset(self):
         pass
 
-class IceHockeyEnvImitation(gymnasium.Env):
+class IceHockeyLearner(gymnasium.Env):
     def __init__(self, args, logging_level=None):
         self.num_envs =1
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
         pi = 3.2
-        super(IceHockeyEnvImitation, self).__init__()
+        super(IceHockeyLearner, self).__init__()
         #
         self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
         # kart_center[0] - 0 to 100 p1_x
@@ -151,7 +150,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
-        self.max_score = 3
+        self.max_score = 1
         self.num_players = 1
         self.team1 = DummyTeam(self.num_players, 0)
 
@@ -204,7 +203,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         # print(f"reward: {reward}")
         # print (p_features)
         # self.terminated = True
-        return  np.array([np.array(p_features)]), np.array([np.array(0, dtype=float)]), np.array([np.array(True if (self.terminated or self.truncated) else False, dtype=bool)]), [{'terminal_observation': np.array(p_features)}]
+        return  np.array(p_features), np.array(0, dtype=float), self.terminated , self.truncated, {'terminal_observation': np.array(p_features)}
 
     def step_async(self, action):
         self.async_res= self.step(action)
@@ -231,7 +230,7 @@ class IceHockeyEnvImitation(gymnasium.Env):
         soccer_state = to_native(self.state.soccer)
         p_features = extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
         # print(p_features)
-        return np.array([np.array(p_features)])
+        return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
     def close(self):
         self.race.stop()

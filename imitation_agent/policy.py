@@ -30,7 +30,7 @@ class IceHockeyEnv(BasePolicy):
 
     def _predict(self, observation, deterministic: bool = False):
         actions = self.model(observation)
-        return np.array([torch.tensor(actions)])
+        return [torch.tensor(actions)]
 
     def predict(
         self,
