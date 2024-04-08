@@ -19,6 +19,7 @@ class IceHockeyEnv(BasePolicy):
     def __init__(self,
                  observation_space: spaces.Space,
                 action_space: spaces.Space, 
+                expert_name: str,
                 num_players: int = 2, team: int = 0):
         super().__init__(
             observation_space,
@@ -26,7 +27,7 @@ class IceHockeyEnv(BasePolicy):
         
         self.num_players = num_players
         self.team = team
-        self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), 'yann_agent.pt'))
+        self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
 
     def _predict(self, observation, deterministic: bool = False):
         actions = self.model(observation)
@@ -47,7 +48,6 @@ class IceHockeyEnv(BasePolicy):
         for i in range(len(observation)):
             obs = observation[i]
             actions.append(self._predict(obs))
-        # print (actions[0])
         return actions, state
         
         
