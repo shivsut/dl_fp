@@ -46,7 +46,7 @@ class DummyTeam():
         return ['tux'] * self.num_players
     def act(self, action):
         # return [dict(acceleration=action[0], steer=action[1], brake=True if action[2] > 0.05 else False, nitro=True if action[3] > 0.05 else False, drift=True if action[4] > 0.05 else False, rescue=False, fire=False)]
-        return [dict(acceleration=action[0], steer=action[1], brake=False, nitro=False, drift=False, rescue=False, fire=False)]
+        return [dict(acceleration=action[0], steer=action[1], brake=action[2]>0.5, nitro=False, drift=False, rescue=False, fire=False)]
         # return [dict(acceleration=action[0]/10, steer=action[1]/100, brake=True if action[2] >0 else False, nitro=True if action[3] >0 else False, drift=True if action[4] >0 else False, rescue=False, fire=False)]
     def reset(self):
         pass
