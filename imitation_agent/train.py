@@ -74,7 +74,7 @@ def main(args):
         policy_dir.cleanup()
         
     print(f"Evaluating")
-    args.record_fn='infer.mp4'
+    args.record_fn=f'{args.variant}.mp4'
     envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(1)])
     expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, EXPERT[0])
     bc_trainer_eval = bc.BC(
