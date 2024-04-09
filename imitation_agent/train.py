@@ -19,14 +19,17 @@ from imitation_agent.learner import IceHockeyLearner
 
 from imitation_agent.policy import IceHockeyEnv
 
-# TODO: Add jurgen agent
+# TODO: Add jurgen agent: 'jurgen_agent'
+# EXPERT = ['jurgen_agent']
 EXPERT = ['geoffrey_agent0', 'geoffrey_agent1', 'yann_agent', 'yoshua_agent0', 'yoshua_agent1']
 
 def main(args):
 
     rng = np.random.default_rng(0)
     
+    # create environment
     envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(args.nenv)])
+    # BC trainer
     bc_trainer = bc.BC(
         observation_space=envs.observation_space,
         action_space=envs.action_space,
@@ -36,6 +39,8 @@ def main(args):
 
     for expert_name in EXPERT:
         # TODO: Use the already trained checkpoint
+        # TODO: 'jurgen_agent' requires different environment (observation_space is small)
+        # envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=expert_name, logging_level='ERROR')) for _ in range(args.nenv)])
         expert = IceHockeyEnv(envs.observation_space, envs.action_space, expert_name)
         with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
             print(tmpdir)
