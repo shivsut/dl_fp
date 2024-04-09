@@ -11,6 +11,7 @@ def extract_features(pstate, opponent_state, soccer_state, team_id):
     """
     # features of ego-vehicle
     # import pdb; pdb.set_trace()
+    kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)
     kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)[[0, 2]]
     kart_center = torch.tensor(pstate['kart']['location'], dtype=torch.float32)[[0, 2]]
     kart_direction = (kart_front-kart_center) / torch.norm(kart_front-kart_center)
@@ -28,8 +29,7 @@ def extract_features(pstate, opponent_state, soccer_state, team_id):
     # opponent_center1 = torch.tensor([0, 0], dtype=torch.float32)
     # opponent_center0 = torch.tensor(opponent_state[0]['kart']['location'], dtype=torch.float32)[[0, 2]]
     # opponent_center1 = torch.tensor(opponent_state[1]['kart']['location'], dtype=torch.float32)[[0, 2]]
-    opponent_center0 = torch.tensor(opponent_state['kart']['location'], dtype=torch.float32)[[0, 2]]  \
-                                    if len(opponent_state) else torch.tensor((10,0), dtype=torch.float32)
+    opponent_center0 = torch.tensor(opponent_state['kart']['location'], dtype=torch.float32)[[0, 2]]  if len(opponent_state) else torch.tensor((10,0), dtype=torch.float32)
     opponent_center1 = torch.tensor((10,0), dtype=torch.float32)
 
     kart_to_opponent0 = (opponent_center0 - kart_center) / torch.norm(opponent_center0-kart_center)
