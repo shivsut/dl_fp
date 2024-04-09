@@ -2,14 +2,13 @@ import numpy as np
 from enum import IntEnum
 import torch, os 
 
-def load_policy(dagger_trainer, path, ckpt='hockey.pt'):
-    ckptPath = f"{path}/{ckpt}"
+def load_policy(dagger_trainer, path, ckpt='hockey'):
+    ckptPath = f"{path}/{ckpt}.pt"
     if os.path.exists(ckptPath):
         # print(f"Updated the states using: {ckptPath}")
         checkpoint = torch.load(ckptPath)
         dagger_trainer.policy.load_state_dict(checkpoint['state_dict']) 
     return dagger_trainer
-
 
 class Team(IntEnum):
     RED = 0
