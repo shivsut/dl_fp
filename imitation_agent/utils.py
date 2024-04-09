@@ -1,16 +1,12 @@
 import numpy as np
 from enum import IntEnum
-
 import torch, os 
 
-def load_policy(dagger_trainer, tmp_path="/tmp/policy"):
-    if not os.path.exists(tmp_path):
-        os.mkdir(tmp_path)
-    
-    ckpt = f"{tmp_path}/hockey.pt"
-    if os.path.exists(ckpt):
-        print(f"Updated the states using: {ckpt}")
-        checkpoint = torch.load(ckpt)
+def load_policy(dagger_trainer, path, ckpt='hockey.pt'):
+    ckptPath = f"{path}/{ckpt}"
+    if os.path.exists(ckptPath):
+        # print(f"Updated the states using: {ckptPath}")
+        checkpoint = torch.load(ckptPath)
         dagger_trainer.policy.load_state_dict(checkpoint['state_dict']) 
     return dagger_trainer
 
