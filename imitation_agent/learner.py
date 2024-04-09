@@ -122,8 +122,8 @@ class IceHockeyLearner(gymnasium.Env):
     def step(self, action):
         #pystk
         self.current_timestep += 1
-        team1_state = [to_native(p) for p in self.state.players[0::2]]
-        team2_state = [to_native(p) for p in self.state.players[1::2]]
+        team1_state = [to_native(p) for p in self.state.players[0:1]]
+        team2_state = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
         team1_actions = self.team1.act(action)
@@ -148,8 +148,8 @@ class IceHockeyLearner(gymnasium.Env):
             self.num_envs = 0
 
         logging.info('state updated, calculating reward')
-        team1_state_next = [to_native(p) for p in self.state.players[0::2]]
-        team2_state_next = [to_native(p) for p in self.state.players[1::2]]
+        team1_state_next = [to_native(p) for p in self.state.players[0:1]]
+        team2_state_next = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
         p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
 
@@ -181,8 +181,8 @@ class IceHockeyLearner(gymnasium.Env):
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
 
-        team1_state_next = [to_native(p) for p in self.state.players[0::2]]
-        team2_state_next = [to_native(p) for p in self.state.players[1::2]]
+        team1_state_next = [to_native(p) for p in self.state.players[0:1]]
+        team2_state_next = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
         p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
