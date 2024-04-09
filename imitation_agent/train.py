@@ -1,7 +1,7 @@
 import os
 import tempfile
 from argparse import ArgumentParser
-
+from random import shuffle
 import numpy as np
 import gymnasium as gym
 from imitation.util.logger import HierarchicalLogger
@@ -47,6 +47,7 @@ def main(args):
 
         for epoch in range(1, args.epochs+1):
             print(f"Epoch #{epoch}")
+            shuffle(EXPERT)
             for expert_name in EXPERT:
                 print (f'epoch: {epoch}, expert: {expert_name}, steps: {int(args.time_steps/len(EXPERT))}')
                 # TODO: Use the already trained checkpoint
@@ -69,7 +70,7 @@ def main(args):
                                         rollout_round_min_episodes=1
                                         )
                     dagger_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
-        dagger_trainer.policy.save(f"./saved_model/hockey.pt")
+        dagger_trainer.policy.save(f"./saved_model/{args.variant}.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
@@ -90,7 +91,7 @@ def main(args):
                         bc_trainer=bc_trainer_eval,
                         custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
                     )
-    dagger_trainer_eval = load_policy(dagger_trainer_eval, path='./saved_model/')
+    dagger_trainer_eval = load_policy(dagger_trainer_eval, path='./saved_model/', ckpt=args.variant)
     reward, _ = evaluate_policy(dagger_trainer_eval.policy, envs_eval, args.time_steps_infer)
     print("Reward:", reward)
 
@@ -100,14 +101,14 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--nenv', type=int, default=4)
     parser.add_argument('-r', '--record_fn', default=None)
     parser.add_argument('--do_train', action='store_true')
-    parser.add_argument('-t', '--time_steps', type=int, default=1000)
+    parser.add_argument('-t', '--time_steps', type=int, default=6000)
     parser.add_argument('-e', '--epochs', type=int, default=10)
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=50)
-    parser.add_argument('-m', '--model_name', default='hockey')
     parser.add_argument('-d', '--deterministic', action='store_true')
     parser.add_argument('--tensor_log', action='store_true')
     parser.add_argument('--debug_mode', action='store_true')
     parser.add_argument('--only_inference', action='store_true')
+    parser.add_argument('-m', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
 
     args = parser.parse_args()
