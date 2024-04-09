@@ -106,13 +106,13 @@ class IceHockeyLearner(gymnasium.Env):
         self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
 
         self.info = {}
-        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
+        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=2 * self.num_players)
         self.race_config.players.pop()
         for i in range(self.num_players):
             self.race_config.players.append(self._make_config(0, False, 'tux'))
             self.race_config.players.append(self._make_config(1, True if args.opponent == 'ai' else False, 'tux'))
         # self.reset()
-        self.race = self._pystk.Race(self.race_config)
+        # self.race = self._pystk.Race(self.race_config)
 
     def _make_config(self, team_id, is_ai, kart):
         PlayerConfig = self._pystk.PlayerConfig
@@ -176,8 +176,12 @@ class IceHockeyLearner(gymnasium.Env):
         self.truncated = False
         self.terminated = False
         logging.info('Starting new race')
-        self.race.stop()
+        if hasattr(self, 'race'):
+            self.race.stop()
+            del self.race
+        self.race = self._pystk.Race(self.race_config)
         self.race.start()
+        self.team2.new_match(1, 1)
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
 

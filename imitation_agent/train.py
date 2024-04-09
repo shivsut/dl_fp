@@ -1,3 +1,4 @@
+import os
 import tempfile
 from argparse import ArgumentParser
 
@@ -57,8 +58,10 @@ def main(args):
                                 rollout_round_min_timesteps=0,
                                 rollout_round_min_episodes=1
                                 )
-            print('training done, evaluating')
-            dagger_trainer.policy.save("./saved_model/imitation.pt")
+            # print (os.getcwd())
+            # eval_file = os.path.join(os.getcwd(), ".\saved_model\mitation.zip")
+            # print('training done, evaluating, saving', eval_file)
+            # dagger_trainer.policy.save(eval_file)
 
     args.record_fn='infer.mp4'
     envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(1)])
