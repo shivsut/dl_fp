@@ -3,8 +3,8 @@ import numpy as np
 from gymnasium import spaces
 import numpy as np
 from collections import namedtuple
-from imitation_agent.utils import VideoRecorder
-from imitation_agent.features import extract_features, extract_featuresV2
+from imitation_agent_.utils import VideoRecorder
+from imitation_agent_.features import extract_features, extract_featuresV2
 
 
 TRACK_NAME = 'icy_soccer_field'
@@ -103,13 +103,14 @@ class IceHockeyLearner(gymnasium.Env):
         self.max_score = 1
         self.num_players = 1
         self.team1 = DummyTeam(self.num_players, 0)
+        self.team1 = AIRunner()
 
         self.info = {}
         self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
         self.race_config.players.pop()
         for i in range(self.num_players):
             self.race_config.players.append(self._make_config(0, False, 'tux'))
-            # self.race_config.players.append(self._make_config(1, True, 'tux'))
+            self.race_config.players.append(self._make_config(1, True, 'tux'))
         # self.reset()
         self.race = self._pystk.Race(self.race_config)
 
@@ -126,15 +127,23 @@ class IceHockeyLearner(gymnasium.Env):
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
         team1_actions = self.team1.act(action)
-        # team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
+        team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
 
         # TODO check for error in info and raise MatchException
         # TODO check for timeout
+        # Assemble the actions
+        import pdb; pdb.set_trace()
+        actions = []
+        for i in range(self.num_players):
+            a1 = team1_actions[i] if team1_actions is not None and i < len(team1_actions) else {}
+            a2 = team2_actions[i] if team2_actions is not None and i < len(team2_actions) else {}
+            actions.append(a1)
+            actions.append(a2)
 
         if self.recorder:
-            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=team1_actions,team1_images=None, team2_images=None)
+            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=actions, team1_images=None, team2_images=None)
 
-        if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
+        if (not self.race.step([self._pystk.Action(**a) for a in actions]) and self.num_players):
             self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
             self.terminated = True
@@ -180,7 +189,8 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = self.extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
+        import pdb; pdb.set_trace()
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
     def close(self):

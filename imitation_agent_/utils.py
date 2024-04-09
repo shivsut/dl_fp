@@ -6,7 +6,7 @@ def load_policy(dagger_trainer, tmp_path="/tmp/policy"):
     if not os.path.exists(tmp_path):
         os.mkdir(tmp_path)
     
-    ckpt = f"{tmp_path}/imitation.pt"
+    ckpt = f"{tmp_path}/exp.pt"
     if os.path.exists(ckpt):
         print(f"Updated the states")
         checkpoint = torch.load(ckpt)
