@@ -77,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--deterministic', action='store_true')
     parser.add_argument('--tensor_log', action='store_true')
     parser.add_argument('--debug_mode', action='store_true')
+    parser.add_argument('--opponent', default='ai')
 
     args = parser.parse_args()
     main(args)

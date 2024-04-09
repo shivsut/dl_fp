@@ -103,13 +103,14 @@ class IceHockeyLearner(gymnasium.Env):
         self.max_score = 1
         self.num_players = 1
         self.team1 = DummyTeam(self.num_players, 0)
+        self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
 
         self.info = {}
         self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=1 * self.num_players)
         self.race_config.players.pop()
         for i in range(self.num_players):
             self.race_config.players.append(self._make_config(0, False, 'tux'))
-            # self.race_config.players.append(self._make_config(1, True, 'tux'))
+            self.race_config.players.append(self._make_config(1, True if args.opponent == 'ai' else False, 'tux'))
         # self.reset()
         self.race = self._pystk.Race(self.race_config)
 
@@ -126,7 +127,7 @@ class IceHockeyLearner(gymnasium.Env):
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
         team1_actions = self.team1.act(action)
-        # team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
+        team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
 
         # TODO check for error in info and raise MatchException
         # TODO check for timeout
@@ -136,6 +137,9 @@ class IceHockeyLearner(gymnasium.Env):
 
         if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
             self.truncated = True
+        if self.args.opponent != 'ai':
+            if (not self.race.step([self._pystk.Action(**a) for a in team2_actions]) and self.num_players):
+                self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
             self.terminated = True
         if not (self.truncated or self.terminated):
@@ -147,7 +151,7 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = self.extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
 
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
@@ -180,7 +184,7 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0::2]]
         team2_state_next = [to_native(p) for p in self.state.players[1::2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = self.extract_state_train(team1_state_next[0], team2_state_next, soccer_state, 0).flatten().tolist()
+        p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
     def close(self):
@@ -201,3 +205,62 @@ class AIRunner:
 
     def info(self):
         return RunnerInfo('state', None, 0)
+
+
+class TeamRunner:
+    agent_type = 'state'
+    _error = None
+    _total_act_time = 0
+
+    def __init__(self, team_or_dir):
+        from pathlib import Path
+        try:
+            from grader import grader
+        except ImportError:
+            try:
+                from . import grader
+            except ImportError:
+                import grader
+
+        self._error = None
+        self._team = None
+        try:
+            if isinstance(team_or_dir, (str, Path)):
+                assignment = grader.load_assignment(team_or_dir)
+                if assignment is None:
+                    self._error = 'Failed to load submission.'
+                else:
+                    self._team = assignment.Team()
+            else:
+                self._team = team_or_dir
+        except Exception as e:
+            self._error = 'Failed to load submission: {}'.format(str(e))
+        if hasattr(self, '_team') and self._team is not None:
+            self.agent_type = self._team.agent_type
+
+    def new_match(self, team: int, num_players: int) -> list:
+        self._total_act_time = 0
+        self._error = None
+        try:
+            r = self._team.new_match(team, num_players)
+            if isinstance(r, str) or isinstance(r, list) or r is None:
+                return r
+            self._error = 'new_match needs to return kart names as a str, list, or None. Got {!r}!'.format(r)
+        except Exception as e:
+            self._error = 'Failed to start new_match: {}'.format(str(e))
+        return []
+
+    def act(self, player_state, *args, **kwargs):
+        from time import time
+        t0 = time()
+        try:
+            r = self._team.act(player_state, *args, **kwargs)
+        except Exception as e:
+            self._error = 'Failed to act: {}'.format(str(e))
+        else:
+            self._total_act_time += time()-t0
+            return r
+        return []
+
+    def info(self):
+        return RunnerInfo(self.agent_type, self._error, self._total_act_time)
