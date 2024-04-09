@@ -17,8 +17,8 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
 from imitation_agent.learner import IceHockeyLearner
-
 from imitation_agent.policy import IceHockeyEnv
+from imitation_agent.utils import load_policy
 
 # TODO: Add jurgen agent: 'jurgen_agent'
 # EXPERT = ['jurgen_agent']
@@ -53,17 +53,17 @@ def main(args):
                 bc_trainer=bc_trainer,
                 custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat(f'out_{expert_name}.csv')])),
             )
+            dagger_trainer = load_policy(dagger_trainer)
             print ('training')
             dagger_trainer.train(int(args.time_steps/len(EXPERT)),
                                 rollout_round_min_timesteps=0,
                                 rollout_round_min_episodes=1
                                 )
-            # print (os.getcwd())
-            # eval_file = os.path.join(os.getcwd(), ".\saved_model\mitation.zip")
-            # print('training done, evaluating, saving', eval_file)
-            # dagger_trainer.policy.save(eval_file)
+            dagger_trainer.policy.save("/tmp/policy/hockey.pt")
+        # dagger_trainer.policy.save("./saved_model/imitation.pt")
+        
 
-    args.record_fn='infer.mp4'
+    args.record_fn='opponents.mp4'
     envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(1)])
     reward, _ = evaluate_policy(dagger_trainer.policy, envs_eval, args.time_steps_infer)
     print("Reward:", reward)
