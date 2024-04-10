@@ -21,7 +21,7 @@ from imitation_agent.policy import IceHockeyEnv
 from imitation_agent.utils import load_policy
 
 # TODO: Add jurgen agent: 'jurgen_agent'
-EXPERT = ['jurgen_agent']
+# EXPERT = ['jurgen_agent']
 # Expert agent for Offense
 # EXPERT = ['geoffrey_agent0', 'yann_agent', 'yoshua_agent0']
 # EXPERT = ['yann_agent']
@@ -35,9 +35,11 @@ def main(args):
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
         print(f"policy_dir: {policy_dir}")
         # create environment
-        envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(args.nenv)])
+        # experts = [args.expert]
+        envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(args.nenv)])
         # experts 
-        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in EXPERT}
+        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in [args.expert]}
+
         # BC trainer
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
@@ -48,9 +50,9 @@ def main(args):
 
         for epoch in range(1, args.epochs+1):
             print(f"Epoch #{epoch}")
-            shuffle(EXPERT)
-            for expert_name in EXPERT:
-                print (f'epoch: {epoch}, expert: {expert_name}, steps: {int(args.time_steps/len(EXPERT))}')
+            shuffle(experts)
+            for expert_name in experts:
+                print (f'epoch: {epoch}, expert: {expert_name}, steps: {int(args.time_steps/len(experts))}')
                 # TODO: Use the already trained checkpoint
                 # TODO: 'jurgen_agent' requires different environment (observation_space is small)
                 # envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=expert_name, logging_level='ERROR')) for _ in range(args.nenv)])
@@ -66,7 +68,7 @@ def main(args):
                         bc_trainer=bc_trainer,
                         custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat(f'./{args.variant}_dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
                     )
-                    dagger_trainer.train(int(args.time_steps/len(EXPERT)),
+                    dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
                                         rollout_round_min_episodes=1
                                         )
@@ -76,8 +78,8 @@ def main(args):
         
     print(f"Evaluating")
     args.record_fn=f'{args.variant}.mp4'
-    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, logging_level='ERROR')) for _ in range(1)])
-    expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, EXPERT[0])
+    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(1)])
+    # expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, args.expert)
     bc_trainer_eval = bc.BC(
             observation_space=envs_eval.observation_space,
             action_space=envs_eval.action_space,
@@ -113,6 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')
+    parser.add_argument('--expert', default='yann_agent')
 
     args = parser.parse_args()
     main(args)
