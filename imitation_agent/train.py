@@ -56,7 +56,7 @@ def main(args):
                 expert = experts[expert_name]
                 with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
                     print(tmpdir)
-                    bc_trainer_ = load_policy(bc_trainer, path=policy_dir.name)
+                    bc_trainer = load_policy(bc_trainer, path=policy_dir.name)
                     dagger_trainer = SimpleDAggerTrainer(
                         venv=envs,
                         scratch_dir=tmpdir,
