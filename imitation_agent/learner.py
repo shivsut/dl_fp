@@ -151,14 +151,16 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0:1]]
         team2_state_next = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
+        p_features = np.array(self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist())
+        if np.isnan(p_features).any():
+            self.terminated = True
 
         # reward = self.reward.step(p_features)
         # logging.info(f'returning new state and reward {reward}')
         # print(f"reward: {reward}")
         # print (p_features)
         # self.terminated = True
-        return  np.array(p_features), np.array(-1 if soccer_state['score'][0] ==0 else 1, dtype=float), self.terminated , self.truncated, {'terminal_observation': np.array(p_features)}
+        return  p_features, np.array(-1 if soccer_state['score'][0] ==0 else 1, dtype=float), self.terminated , self.truncated, {'terminal_observation': p_features}
 
     def step_async(self, action):
         self.async_res= self.step(action)
