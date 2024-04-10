@@ -5,7 +5,5 @@
 *.zip
 *.0
 *.csv
-*.pt
 /dg_log
-/saved_model
 /saved_model

@@ -52,7 +52,7 @@ class DummyTeam():
         pass
 
 class IceHockeyLearner(gymnasium.Env):
-    def __init__(self, args, expert='yann_agent', logging_level=None):
+    def __init__(self, args, expert='jurgen_agent', logging_level=None):
         self.num_envs =1
         self.do_init = True
         self.args = args
@@ -80,7 +80,15 @@ class IceHockeyLearner(gymnasium.Env):
         # kart_to_opponent0_angle_difference - -1 to 1
         # kart_to_opponent1_angle_difference - -1 to 1
         # kart_to_goal_line_angle_difference
-        self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, 0, 0, 0, 0, -pi, -1, -pi, -pi, -1, -1, -1]), high=np.array([100, 100, pi, pi, 100, 100, 100, 100, 60, 60, -pi, 1, pi, pi, 1, 1, 1]),dtype=np.float32)
+        if expert == 'jurgen_agent':
+            # TODO optimize max space
+            self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, -pi, 0, 0, 0, 0]),
+                                                high=np.array([100, 100, -pi, -pi, 100, 100, -pi, 100, 100, 100, 100]),
+                                                dtype=np.float32)
+        else:
+            self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, 0, 0, 0, 0, -pi, -1, -pi, -pi, -1, -1, -1]),
+                                                high=np.array([100, 100, pi, pi, 100, 100, 100, 100, 60, 60, -pi, 1, pi, pi, 1, 1, 1]),
+                                                dtype=np.float32)
         # features = torch.tensor([kart_center[0], kart_center[1], kart_angle, kart_to_puck_angle, opponent_center0[0],
         #                          opponent_center0[1], opponent_center1[0], opponent_center1[1], kart_to_opponent0_angle,
         #                          kart_to_opponent1_angle,

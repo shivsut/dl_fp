@@ -21,9 +21,10 @@ from imitation_agent.policy import IceHockeyEnv
 from imitation_agent.utils import load_policy
 
 # TODO: Add jurgen agent: 'jurgen_agent'
-# EXPERT = ['jurgen_agent']
+EXPERT = ['jurgen_agent']
 # Expert agent for Offense
-EXPERT = ['geoffrey_agent0', 'yann_agent', 'yoshua_agent0']
+# EXPERT = ['geoffrey_agent0', 'yann_agent', 'yoshua_agent0']
+# EXPERT = ['yann_agent']
 # Expert agent for Defense
 # EXPERT = ['geoffrey_agent1', 'yoshua_agent1']
 
