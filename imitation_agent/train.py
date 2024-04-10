@@ -12,7 +12,7 @@ from imitation.algorithms import bc
 from imitation.algorithms.dagger import SimpleDAggerTrainer
 from imitation.policies.serialize import load_policy
 from imitation.util.util import make_vec_env
-from stable_baselines3.common.logger import Logger, CSVOutputFormat
+from stable_baselines3.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
@@ -41,7 +41,7 @@ def main(args):
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
-            custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat('out2.csv')])),
+            custom_logger=HierarchicalLogger(Logger('./bc_log/', output_formats=[TensorBoardOutputFormat('./bc_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_bc_csv.csv'))])),
             rng=rng,
         )
 
@@ -62,7 +62,7 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat(f'out_{expert_name}.csv')])),
+                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
                     )
                     dagger_trainer = load_policy(dagger_trainer, path=policy_dir.name)
                     dagger_trainer.train(int(args.time_steps/len(EXPERT)),
@@ -80,7 +80,7 @@ def main(args):
     bc_trainer_eval = bc.BC(
             observation_space=envs_eval.observation_space,
             action_space=envs_eval.action_space,
-            custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat('out2.csv')])),
+            # custom_logger=HierarchicalLogger(Logger('./log/',output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.getcwd()+'\\dg_train_csv.csv')])),
             rng=rng,
         )
     dagger_trainer_eval = SimpleDAggerTrainer(
@@ -89,9 +89,10 @@ def main(args):
                         expert_policy=expert_eval,
                         rng=rng,
                         bc_trainer=bc_trainer_eval,
-                        custom_logger=HierarchicalLogger(Logger('./log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
+                        # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
                     )
     dagger_trainer_eval = load_policy(dagger_trainer_eval, path='./saved_model/', ckpt=args.variant)
+    dagger_trainer_eval.policy.eval()
     reward, _ = evaluate_policy(dagger_trainer_eval.policy, envs_eval, args.time_steps_infer)
     print("Reward:", reward)
 
