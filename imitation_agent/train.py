@@ -56,6 +56,7 @@ def main(args):
                 expert = experts[expert_name]
                 with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
                     print(tmpdir)
+                    bc_trainer_ = load_policy(bc_trainer, path=policy_dir.name)
                     dagger_trainer = SimpleDAggerTrainer(
                         venv=envs,
                         scratch_dir=tmpdir,
@@ -64,13 +65,12 @@ def main(args):
                         bc_trainer=bc_trainer,
                         custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
                     )
-                    dagger_trainer = load_policy(dagger_trainer, path=policy_dir.name)
                     dagger_trainer.train(int(args.time_steps/len(EXPERT)),
                                         rollout_round_min_timesteps=0,
                                         rollout_round_min_episodes=1
                                         )
-                    dagger_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
-        dagger_trainer.policy.save(f"./saved_model/{args.variant}.pt")
+                    bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
+        bc_trainer.policy.save(f"./saved_model/{args.variant}.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
@@ -91,9 +91,9 @@ def main(args):
                         bc_trainer=bc_trainer_eval,
                         # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
                     )
-    dagger_trainer_eval = load_policy(dagger_trainer_eval, path='./saved_model/', ckpt=args.variant)
-    dagger_trainer_eval.policy.eval()
-    reward, _ = evaluate_policy(dagger_trainer_eval.policy, envs_eval, args.time_steps_infer)
+    bc_trainer_eval = load_policy(bc_trainer_eval, path='./saved_model/', ckpt=args.variant)
+    bc_trainer_eval.policy.eval()
+    reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer)
     print("Reward:", reward)
 
 

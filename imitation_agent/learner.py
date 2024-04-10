@@ -158,7 +158,7 @@ class IceHockeyLearner(gymnasium.Env):
         # print(f"reward: {reward}")
         # print (p_features)
         # self.terminated = True
-        return  np.array(p_features), np.array(0, dtype=float), self.terminated , self.truncated, {'terminal_observation': np.array(p_features)}
+        return  np.array(p_features), np.array(-1 if soccer_state['score'][0] ==0 else 1, dtype=float), self.terminated , self.truncated, {'terminal_observation': np.array(p_features)}
 
     def step_async(self, action):
         self.async_res= self.step(action)
