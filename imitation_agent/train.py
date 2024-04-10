@@ -41,7 +41,7 @@ def main(args):
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
-            custom_logger=HierarchicalLogger(Logger('./bc_log/', output_formats=[TensorBoardOutputFormat('./bc_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_bc_csv.csv'))])),
+            custom_logger=HierarchicalLogger(Logger('./bc_log/', output_formats=[TensorBoardOutputFormat(f'./{args.variant}_bc_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_bc_csv.csv'))])),
             rng=rng,
         )
 
@@ -63,7 +63,7 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
+                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat(f'./{args.variant}_dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(EXPERT)),
                                         rollout_round_min_timesteps=0,
@@ -83,14 +83,14 @@ def main(args):
             # custom_logger=HierarchicalLogger(Logger('./log/',output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.getcwd()+'\\dg_train_csv.csv')])),
             rng=rng,
         )
-    dagger_trainer_eval = SimpleDAggerTrainer(
-                        venv=envs_eval,
-                        scratch_dir=None,
-                        expert_policy=expert_eval,
-                        rng=rng,
-                        bc_trainer=bc_trainer_eval,
-                        # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
-                    )
+    # dagger_trainer_eval = SimpleDAggerTrainer(
+    #                     venv=envs_eval,
+    #                     scratch_dir=None,
+    #                     expert_policy=expert_eval,
+    #                     rng=rng,
+    #                     bc_trainer=bc_trainer_eval,
+    #                     # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
+    #                 )
     bc_trainer_eval = load_policy(bc_trainer_eval, path='./saved_model/', ckpt=args.variant)
     bc_trainer_eval.policy.eval()
     reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer)
@@ -104,15 +104,14 @@ if __name__ == '__main__':
     parser.add_argument('--do_train', action='store_true')
     parser.add_argument('-t', '--time_steps', type=int, default=6000)
     parser.add_argument('-e', '--epochs', type=int, default=10)
-    parser.add_argument('-ti', '--time_steps_infer', type=int, default=50)
+    parser.add_argument('-ti', '--time_steps_infer', type=int, default=10)
     parser.add_argument('-d', '--deterministic', action='store_true')
     parser.add_argument('--tensor_log', action='store_true')
     parser.add_argument('--debug_mode', action='store_true')
     parser.add_argument('--only_inference', action='store_true')
-    parser.add_argument('-m', '--variant', type=str, default='hockey')
+    parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
+    parser.add_argument('--use_opponent', action='store_true')
 
     args = parser.parse_args()
     main(args)
-
-    

@@ -103,14 +103,17 @@ class IceHockeyLearner(gymnasium.Env):
         self.max_score = 1
         self.num_players = 1
         self.team1 = DummyTeam(self.num_players, 0)
-        self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
+        if self.args.use_opponent:
+            self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
 
         self.info = {}
-        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=2 * self.num_players)
+        num_kart = 2 if self.args.use_opponent else 1
+        self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=num_kart * self.num_players)
         self.race_config.players.pop()
-        for i in range(self.num_players):
+        for _ in range(self.num_players):
             self.race_config.players.append(self._make_config(0, False, 'tux'))
-            self.race_config.players.append(self._make_config(1, True if args.opponent == 'ai' else False, 'tux'))
+            if self.args.use_opponent:
+                self.race_config.players.append(self._make_config(1, True if args.opponent == 'ai' else False, 'tux'))
         # self.reset()
         # self.race = self._pystk.Race(self.race_config)
 
@@ -127,7 +130,7 @@ class IceHockeyLearner(gymnasium.Env):
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
         team1_actions = self.team1.act(action)
-        team2_actions = self.team2.act(team2_state, team1_state, soccer_state)
+        team2_actions = self.team2.act(team2_state, team1_state, soccer_state) if self.args.use_opponent else []
 
         # TODO check for error in info and raise MatchException
         # TODO check for timeout
@@ -137,7 +140,7 @@ class IceHockeyLearner(gymnasium.Env):
 
         if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
             self.truncated = True
-        if self.args.opponent != 'ai':
+        if self.args.opponent != 'ai' and self.args.use_opponent:
             if (not self.race.step([self._pystk.Action(**a) for a in team2_actions]) and self.num_players):
                 self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
@@ -151,7 +154,8 @@ class IceHockeyLearner(gymnasium.Env):
         team1_state_next = [to_native(p) for p in self.state.players[0:1]]
         team2_state_next = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = np.array(self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist())
+        opponent_state = team2_state_next[0] if self.args.use_opponent else team2_state_next
+        p_features = np.array(self.extract_state_train(team1_state_next[0], opponent_state, soccer_state, 0).flatten().tolist())
         if np.isnan(p_features).any():
             self.terminated = True
 
@@ -183,14 +187,16 @@ class IceHockeyLearner(gymnasium.Env):
             del self.race
         self.race = self._pystk.Race(self.race_config)
         self.race.start()
-        self.team2.new_match(1, 1)
+        if self.args.use_opponent:
+            self.team2.new_match(1, 1)
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
 
         team1_state_next = [to_native(p) for p in self.state.players[0:1]]
         team2_state_next = [to_native(p) for p in self.state.players[1:2]]
         soccer_state = to_native(self.state.soccer)
-        p_features = self.extract_state_train(team1_state_next[0], team2_state_next[0], soccer_state, 0).flatten().tolist()
+        opponent_state = team2_state_next[0] if self.args.use_opponent else team2_state_next
+        p_features = self.extract_state_train(team1_state_next[0], opponent_state, soccer_state, 0).flatten().tolist()
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
     def close(self):
