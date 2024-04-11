@@ -66,7 +66,7 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[TensorBoardOutputFormat(f'./{args.variant}_dg_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
+                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
@@ -96,7 +96,7 @@ def main(args):
     #                 )
     bc_trainer_eval = load_policy(bc_trainer_eval, path='./saved_model/', ckpt=args.variant)
     bc_trainer_eval.policy.eval()
-    reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer)
+    reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer, deterministic=False)
     print("Reward:", reward)
 
 
