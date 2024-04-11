@@ -2,6 +2,25 @@ import numpy as np
 from enum import IntEnum
 import torch, os 
 
+class discretization:
+    def __init__(self, naction=3, K=10):
+        """
+        naction: Number of actions
+        K = Number of bins to create 
+        """
+        self.naction = naction
+        self.K = K
+        # action_space: {Acceleration, Steering, Brake)
+        self.action_low = [0, -1, 0]
+        self.action_high = [1, 1, 1]
+        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K), 3) for i in range(self.naction)]
+
+    def convert(self, x):
+        # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html
+        inds = [np.digitize(x[i], self.bins[i]) for i in range(self.naction)]
+        discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
+        return discretized_value
+
 def load_policy(dagger_trainer, path, ckpt='hockey'):
     ckptPath = f"{path}/{ckpt}.pt"
     if os.path.exists(ckptPath):

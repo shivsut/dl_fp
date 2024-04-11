@@ -3,7 +3,7 @@ import numpy as np
 from gymnasium import spaces
 import numpy as np
 from collections import namedtuple
-from imitation_agent.utils import VideoRecorder
+from imitation_agent.utils import VideoRecorder, discretization
 from imitation_agent.features import extract_features, extract_featuresV2
 
 
@@ -65,6 +65,7 @@ class IceHockeyLearner(gymnasium.Env):
         super(IceHockeyLearner, self).__init__()
         #
         self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
+        self.discrete = discretization()
         # kart_center[0] - 0 to 100 p1_x
         # kart_center[1] - 0 to 100 p2_y
         # kart_angle - -pi to pi
@@ -157,6 +158,8 @@ class IceHockeyLearner(gymnasium.Env):
         return PlayerConfig(controller=controller, team=team_id, kart=kart)
 
     def step(self, action):
+        if self.args.discretization:
+            action = self.discrete.convert(action)
         #pystk
         self.current_timestep += 1
         team1_state = [to_native(p) for p in self.state.players[0:1]]

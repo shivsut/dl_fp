@@ -32,8 +32,12 @@ def main(args):
     rng = np.random.default_rng(0)    
 
     if not args.only_inference:
+        # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
-        print(f"policy_dir: {policy_dir}")
+        data_dir = os.path.join(os.getcwd(), args.variant)
+        if not os.path.exists(data_dir):
+            os.mkdir(data_dir)
+        print(f"Data will saved at: {data_dir}")
         # create environment
         # experts = [args.expert]
         envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(args.nenv)])
@@ -44,7 +48,7 @@ def main(args):
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
-            custom_logger=HierarchicalLogger(Logger('./bc_log/', output_formats=[TensorBoardOutputFormat(f'./{args.variant}_bc_log/'), CSVOutputFormat(os.path.join(os.getcwd(),'train_bc_csv.csv'))])),
+            custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
             rng=rng,
         )
 
@@ -66,18 +70,18 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(os.path.join(os.getcwd(),'train_dg_csv.csv'))])),
+                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
                                         rollout_round_min_episodes=1
                                         )
                     bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
-        bc_trainer.policy.save(f"./saved_model/{args.variant}.pt")
+        bc_trainer.policy.save(f"{data_dir}/{args.variant}.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
-    args.record_fn=f'{args.variant}.mp4'
+    args.record_fn=f'{data_dir}/{args.variant}.mp4'
     envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(1)])
     # expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, args.expert)
     bc_trainer_eval = bc.BC(
@@ -94,7 +98,7 @@ def main(args):
     #                     bc_trainer=bc_trainer_eval,
     #                     # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
     #                 )
-    bc_trainer_eval = load_policy(bc_trainer_eval, path='./saved_model/', ckpt=args.variant)
+    bc_trainer_eval = load_policy(bc_trainer_eval, path=data_dir, ckpt=args.variant)
     bc_trainer_eval.policy.eval()
     reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer, deterministic=False)
     print("Reward:", reward)
@@ -108,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time_steps', type=int, default=6000)
     parser.add_argument('-e', '--epochs', type=int, default=10)
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=10)
-    parser.add_argument('-d', '--deterministic', action='store_true')
+    parser.add_argument('--deterministic', action='store_true')
     parser.add_argument('--tensor_log', action='store_true')
     parser.add_argument('--debug_mode', action='store_true')
     parser.add_argument('--only_inference', action='store_true')
@@ -116,6 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')
     parser.add_argument('--expert', default='yann_agent')
+    parser.add_argument('-d', '--discretization', action='store_true')
 
     args = parser.parse_args()
     main(args)
