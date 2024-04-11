@@ -151,7 +151,8 @@ class Match:
     @staticmethod
     def _g(f):
         from .remote import ray
-        if ray is not None and isinstance(f, (ray.types.ObjectRef, ray._raylet.ObjectRef)):
+        # if ray is not None and isinstance(f, (ray.types.ObjectRef, ray._raylet.ObjectRef)):
+        if ray is not None and isinstance(f, (ray.ObjectRef, ray._raylet.ObjectRef)):
             return ray.get(f)
         return f
 
