@@ -57,7 +57,7 @@ class IceHockeyLearner(gymnasium.Env):
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
-        pi = 3.2
+        pi = np.pi
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
         #
@@ -82,8 +82,20 @@ class IceHockeyLearner(gymnasium.Env):
         # kart_to_goal_line_angle_difference
         if expert == 'jurgen_agent':
             # TODO optimize max space
-            self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, -pi, 0, 0, 0, 0]),
-                                                high=np.array([100, 100, -pi, -pi, 100, 100, -pi, 100, 100, 100, 100]),
+            # kart_center[0],
+            # kart_center[1],
+            # kart_angle,
+            # kart_to_puck_angle,
+            #                          goal_line_center[0],
+            #                          goal_line_center[1],
+            #                          kart_to_puck_angle_difference,
+            #                          puck_center[0],
+            #                          puck_center[1],
+            #                          puck_to_goal_line[0],
+            #                          puck_to_goal_line[1]],
+            #                         dtype=torch.float32)
+            self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, -0.1, 64, -1, 0, 0, -1, -1]),
+                                                high=np.array([60, 100, pi, pi, 0.1, 65, 1, 60, 100, 1, 1]),
                                                 dtype=np.float32)
         else:
             self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, 0, 0, 0, 0, -pi, -1, -pi, -pi, -1, -1, -1]),
