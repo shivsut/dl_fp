@@ -57,8 +57,10 @@ class IceHockeyLearner(gymnasium.Env):
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
-        # pi = np.pi
-        pi = 3.2
+        pi = np.pi
+        x_max = 40
+        y_max = 66
+        # pi = 3.2
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
         #
@@ -95,19 +97,30 @@ class IceHockeyLearner(gymnasium.Env):
             #                          puck_to_goal_line[0],
             #                          puck_to_goal_line[1]],
             #                         dtype=torch.float32)
-            self.observation_space = spaces.Box(low=np.array([-50, -66, -pi, -pi, -0.1, 64, -1, -50,  -66,  -1, -1]),
-                                                high=np.array([50,  66,  pi,  pi,  0.1, 65,  1,  50,   66,   1,  1]),
+            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -0.1, y_max-1, -1, -x_max,  -y_max,  -1,  0]),
+                                                high=np.array([x_max,  y_max,  pi,  pi,  0.1, y_max+1,  1,  x_max,   y_max,   1,  1]),
                                                 dtype=np.float32)
         else:
-            self.observation_space = spaces.Box(low=np.array([0, 0, -pi, -pi, 0, 0, 0, 0, 0, 0, -pi, -1, -pi, -pi, -1, -1, -1]),
-                                                high=np.array([100, 100, pi, pi, 100, 100, 100, 100, 60, 60, -pi, 1, pi, pi, 1, 1, 1]),
+            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -x_max, -y_max, -x_max, -y_max, -pi, -pi, -0.1, y_max-1, -pi, -1, -1, -1, -1]),
+                                                high=np.array([x_max,  y_max,  pi,  pi,  x_max,  y_max,  x_max,  y_max,  pi,  pi,  0.1, y_max+1,  pi,  1,  1,  1, 1]),
                                                 dtype=np.float32)
-        # features = torch.tensor([kart_center[0], kart_center[1], kart_angle, kart_to_puck_angle, opponent_center0[0],
-        #                          opponent_center0[1], opponent_center1[0], opponent_center1[1], kart_to_opponent0_angle,
+        # features = torch.tensor([kart_center[0],
+        # kart_center[1],
+        # kart_angle,
+        # kart_to_puck_angle,
+        # opponent_center0[0],
+        #
+        #                          opponent_center0[1],
+        #                          opponent_center1[0],
+        #                          opponent_center1[1],
+        #                          kart_to_opponent0_angle,
         #                          kart_to_opponent1_angle,
-        #                          goal_line_center[0], goal_line_center[1], puck_to_goal_line_angle,
+        #                          goal_line_center[0],
+        #                          goal_line_center[1],
+        #                          puck_to_goal_line_angle,
         #                          kart_to_puck_angle_difference,
-        #                          kart_to_opponent0_angle_difference, kart_to_opponent1_angle_difference,
+        #                          kart_to_opponent0_angle_difference,
+        #                          kart_to_opponent1_angle_difference,
         #                          kart_to_goal_line_angle_difference], dtype=torch.float32)
 
         self._pystk = pystk
