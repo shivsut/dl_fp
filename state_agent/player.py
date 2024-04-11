@@ -1,3 +1,4 @@
+import time
 from os import path
 
 import torch
@@ -18,11 +19,12 @@ class Team:
         self.verbose = False
         self.use_model = False
 
-        model = 'yann_imi.pt'
+        model = 'test1.pt'
         path1 = path.join(path.dirname(path.abspath(__file__)), model)
         self.model_p0 = torch.jit.load(path1)
         self.model_p1 = torch.jit.load(path1)
         self.use_model = True
+        self.running_avg = []
 
     def new_match(self, team: int, num_players: int) -> list:
         """
@@ -74,6 +76,7 @@ class Team:
         """
 
         actions = []
+        start = time.time()
         for player_id, pstate in enumerate(player_state):
             # TODO: Use Policy to get the actions of each player
             if self.use_model:
@@ -89,6 +92,10 @@ class Team:
             
             # accumulate the action of each player
             actions.append(action)
-        
+        end = time.time()
+        self.running_avg.append(end-start)
+        if len(self.running_avg) > 20:
+            print(f"avg act time {np.mean(self.running_avg)*1000} ms")
+            self.running_avg = []
         return actions
 
