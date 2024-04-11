@@ -3,7 +3,6 @@
 *.mp4
 *.pyc
 *.zip
-*.0
 *.csv
 /dg_log
 /saved_model
