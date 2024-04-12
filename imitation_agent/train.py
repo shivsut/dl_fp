@@ -1,5 +1,5 @@
 import os, torch
-import tempfile
+import tempfile, shutil
 from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
@@ -35,6 +35,13 @@ def main(args):
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
+        # Resume training
+        if args.resume_training:
+            src = os.path.join(os.getcwd(), args.resume_training)
+            dst = os.path.join(policy_dir.name, "hockey.pt")
+            shutil.copy(src, dst)
+            print(f"Resume the training using ckpt: {src}")
+            
         data_dir = os.path.join(os.getcwd(), args.variant)
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
