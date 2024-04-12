@@ -40,7 +40,7 @@ def main(args):
             src = os.path.join(os.getcwd(), args.resume_training)
             dst = os.path.join(policy_dir.name, "hockey.pt")
             shutil.copy(src, dst)
-            print(f"Resume the training using ckpt: {src}")
+            print(f"Resuming the training using ckpt: {src}")
             
         data_dir = os.path.join(os.getcwd(), args.variant)
         if not os.path.exists(data_dir):

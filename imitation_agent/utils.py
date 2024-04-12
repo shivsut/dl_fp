@@ -3,17 +3,17 @@ from enum import IntEnum
 import torch, os 
 
 class discretization:
-    def __init__(self, naction=3, K=10):
+    def __init__(self, naction=3):
         """
         naction: Number of actions
         K = Number of bins to create 
         """
         self.naction = naction
-        self.K = K
         # action_space: {Acceleration, Steering, Brake)
+        self.K = [10, 20, 4]
         self.action_low = [0, -1, 0]
         self.action_high = [1, 1, 1]
-        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K), 3) for i in range(self.naction)]
+        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K[i]), 3) for i in range(self.naction)]
 
     def convert(self, x):
         # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html
