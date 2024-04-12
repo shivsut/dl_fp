@@ -1,4 +1,4 @@
-import os
+import os, torch
 import tempfile
 from argparse import ArgumentParser
 from random import shuffle
@@ -50,6 +50,8 @@ def main(args):
             action_space=envs.action_space,
             custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
             rng=rng,
+            batch_size=args.batch_size,
+            device=torch.device(args.device),
         )
 
         for epoch in range(1, args.epochs+1):
@@ -87,17 +89,10 @@ def main(args):
     bc_trainer_eval = bc.BC(
             observation_space=envs_eval.observation_space,
             action_space=envs_eval.action_space,
-            # custom_logger=HierarchicalLogger(Logger('./log/',output_formats=[TensorBoardOutputFormat('./dg_log/'), CSVOutputFormat(os.getcwd()+'\\dg_train_csv.csv')])),
             rng=rng,
+            batch_size=args.batch_size,
+            device=torch.device(args.device),
         )
-    # dagger_trainer_eval = SimpleDAggerTrainer(
-    #                     venv=envs_eval,
-    #                     scratch_dir=None,
-    #                     expert_policy=expert_eval,
-    #                     rng=rng,
-    #                     bc_trainer=bc_trainer_eval,
-    #                     # custom_logger=HierarchicalLogger(Logger('./dg_log/', output_formats=[CSVOutputFormat(f'out_infer.csv')])),
-    #                 )
     bc_trainer_eval = load_policy(bc_trainer_eval, path=data_dir, ckpt=args.variant)
     bc_trainer_eval.policy.eval()
     reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer, deterministic=False)
@@ -121,6 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--use_opponent', action='store_true')
     parser.add_argument('--expert', default='yann_agent')
     parser.add_argument('-d', '--discretization', action='store_true')
+    parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
+    parser.add_argument('-bs', '--batch_size', type=int, default=128)
 
     args = parser.parse_args()
     main(args)
