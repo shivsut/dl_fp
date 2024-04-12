@@ -4,7 +4,7 @@ from os import path
 import torch
 import numpy as np
 
-from imitation_agent.features import extract_features
+from imitation_agent.features import extract_features, extract_featuresV2
 
 
 class Team:
@@ -19,7 +19,7 @@ class Team:
         self.verbose = False
         self.use_model = False
 
-        model = 'test1.pt'
+        model = 'test1_da_jit.pt'
         path1 = path.join(path.dirname(path.abspath(__file__)), model)
         self.model_p0 = torch.jit.load(path1)
         self.model_p1 = torch.jit.load(path1)
@@ -80,11 +80,12 @@ class Team:
         for player_id, pstate in enumerate(player_state):
             # TODO: Use Policy to get the actions of each player
             if self.use_model:
-                features = extract_features(pstate, soccer_state, opponent_state, self.team)
+                features = extract_featuresV2(pstate, opponent_state, soccer_state, self.team)
                 if player_id % 2 == 0:
-                    action = self.model0(features)
+                    action = self.model_p0(features)
                 else:
-                    action = self.model1(features)
+                    action = self.model_p1(features)
+                action = dict(acceleration=action[0], steer=action[1], brake=action[2])
             else:
                 # Generate random actions for all players
                 action = dict(acceleration=0.7, brake=0, drift=0,

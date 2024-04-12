@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
+from imitation.policies.base import FeedForward32Policy
 from imitation.util.logger import HierarchicalLogger
 from stable_baselines3.common.evaluation import evaluate_policy
 import imitation.data.rollout as rollout
@@ -80,6 +81,8 @@ def main(args):
                                         )
                     bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
         bc_trainer.policy.save(f"{data_dir}/{args.variant}.pt")
+        m = torch.jit.script(bc_trainer.policy.mlp_extractor)
+        torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
