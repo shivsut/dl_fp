@@ -128,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--discretization', action='store_true')
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
+    parser.add_argument('--resume_training', action='store_true')
 
     args = parser.parse_args()
     main(args)
