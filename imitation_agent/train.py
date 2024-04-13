@@ -56,7 +56,7 @@ def main(args):
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
-            custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
+            custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/')])),
             rng=rng,
             batch_size=args.batch_size,
             device=torch.device(args.device),
@@ -80,11 +80,12 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
+                        # custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
-                                        rollout_round_min_episodes=1
+                                        rollout_round_min_episodes=1,
+                                         bc_train_kwargs={'progress_bar':False}
                                         )
                     bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
         bc_trainer.policy.save(f"{data_dir}/{args.variant}.pt")

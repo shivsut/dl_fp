@@ -11,9 +11,9 @@ class discretization:
         """
         self.naction = naction
         # action_space: {Acceleration, Steering, Brake)
-        self.K = [100, 200, 2]
-        self.K_n = [110, 210, 2]
-        self.start = [0, -100, 0]
+        self.K = [10, 20, 2]
+        self.K_n = [11, 21, 2]
+        self.start = [0, -10, 0]
         self.action_low = [0, -1, 0]
         self.action_high = [1, 1, 1]
         self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K[i], dtype=float), 3) for i in range(self.naction)]
@@ -28,11 +28,11 @@ class discretization:
         # discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
         # return self.bins[closest_actions]
         res = torch.tensor([self.bins[i][j] for i, j in enumerate(closest_actions_idx)])
-        res[0] *= 100
-        res[1] *= 100
+        res[0] *= 10
+        res[1] *= 10
         # print(res[1])
         if res[1] > 0:
-            res[1] += 100
+            res[1] += 10
         else:
             res[1] *= -1 # naking it positive
         res[0] = int(res[0])
@@ -43,8 +43,8 @@ class discretization:
     def de_discrete(self, action: np.ndarray) -> np.ndarray:
         res = []
 
-        res.append(float(action[0])/100.0)
-        res.append(float(action[1])/100.0)
+        res.append(float(action[0])/10.0)
+        res.append(float(action[1])/10.0)
         if res[1] != 0.0:
             if res[1] > 1.0:
                 res[1] -= 1.0
