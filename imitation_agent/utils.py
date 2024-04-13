@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 from enum import IntEnum
 import torch, os 
@@ -10,16 +11,47 @@ class discretization:
         """
         self.naction = naction
         # action_space: {Acceleration, Steering, Brake)
-        self.K = [10, 20, 4]
+        self.K = [100, 200, 2]
+        self.K_n = [110, 210, 2]
+        self.start = [0, -100, 0]
         self.action_low = [0, -1, 0]
         self.action_high = [1, 1, 1]
-        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K[i]), 3) for i in range(self.naction)]
+        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K[i], dtype=float), 3) for i in range(self.naction)]
 
-    def convert(self, x):
+    def __call__(self, x):
         # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html
-        inds = [np.digitize(x[i], self.bins[i]) for i in range(self.naction)]
-        discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
-        return discretized_value
+        # inds =
+        # TODO remove tensor to np conversion
+        if isinstance(x, torch.Tensor):
+            x = x.numpy()
+        closest_actions_idx = [np.abs(self.bins[i] - x[i]).argmin() for i in range(self.naction)]
+        # discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
+        # return self.bins[closest_actions]
+        res = torch.tensor([self.bins[i][j] for i, j in enumerate(closest_actions_idx)])
+        res[0] *= 100
+        res[1] *= 100
+        # print(res[1])
+        if res[1] > 0:
+            res[1] += 100
+        else:
+            res[1] *= -1 # naking it positive
+        res[0] = int(res[0])
+        res[1] = int(res[1])
+        res[2] = int(res[2])
+        return res
+
+    def de_discrete(self, action: np.ndarray) -> np.ndarray:
+        res = []
+
+        res.append(float(action[0])/100.0)
+        res.append(float(action[1])/100.0)
+        if res[1] != 0.0:
+            if res[1] > 1.0:
+                res[1] -= 1.0
+            else:
+                res[1] -= 1.0
+        res.append(float(action[2]))
+        return np.array(res)
 
 def load_policy(dagger_trainer, path, ckpt='hockey'):
     ckptPath = f"{path}/{ckpt}.pt"

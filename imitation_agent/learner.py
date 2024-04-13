@@ -64,8 +64,9 @@ class IceHockeyLearner(gymnasium.Env):
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
         #
-        self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
+        # self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
         self.discrete = discretization()
+        self.action_space = spaces.MultiDiscrete(nvec=self.discrete.K_n, start=self.discrete.start)
         # kart_center[0] - 0 to 100 p1_x
         # kart_center[1] - 0 to 100 p2_y
         # kart_angle - -pi to pi
@@ -133,7 +134,7 @@ class IceHockeyLearner(gymnasium.Env):
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
-        self.max_timestep = 500
+        self.max_timestep = 1200
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
@@ -158,9 +159,8 @@ class IceHockeyLearner(gymnasium.Env):
         return PlayerConfig(controller=controller, team=team_id, kart=kart)
 
     def step(self, action):
-        if self.args.discretization:
-            action = self.discrete.convert(action)
-        #pystk
+
+        action = self.discrete.de_discrete(action)
         self.current_timestep += 1
         team1_state = [to_native(p) for p in self.state.players[0:1]]
         team2_state = [to_native(p) for p in self.state.players[1:2]]

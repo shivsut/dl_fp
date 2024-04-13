@@ -30,8 +30,8 @@ from imitation_agent.utils import load_policy
 # EXPERT = ['geoffrey_agent1', 'yoshua_agent1']
 
 def main(args):
-    rng = np.random.default_rng(0)    
-
+    rng = np.random.default_rng(0)
+    data_dir = os.path.join(os.getcwd(), args.variant)
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
@@ -42,7 +42,7 @@ def main(args):
             shutil.copy(src, dst)
             print(f"Resuming the training using ckpt: {src}")
             
-        data_dir = os.path.join(os.getcwd(), args.variant)
+
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
@@ -128,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--discretization', action='store_true')
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
+    parser.add_argument('--resume_training', action='store_true')
 
     args = parser.parse_args()
     main(args)
