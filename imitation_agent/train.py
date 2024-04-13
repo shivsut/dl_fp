@@ -4,15 +4,15 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
-from imitation.policies.base import FeedForward32Policy
-from imitation.util.logger import HierarchicalLogger
+from imitation_local.policies.base import FeedForward32Policy
+from imitation_local.util.logger import HierarchicalLogger
 from stable_baselines3.common.evaluation import evaluate_policy
-import imitation.data.rollout as rollout
+import imitation_local.data.rollout as rollout
 
-from imitation.algorithms import bc
-from imitation.algorithms.dagger import SimpleDAggerTrainer
-from imitation.policies.serialize import load_policy
-from imitation.util.util import make_vec_env
+from imitation_local.algorithms import bc
+from imitation_local.algorithms.dagger import SimpleDAggerTrainer
+from imitation_local.policies.serialize import load_policy
+from imitation_local.util.util import make_vec_env
 from stable_baselines3.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv
