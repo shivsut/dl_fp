@@ -20,6 +20,7 @@ from sb3_local.common.vec_env import SubprocVecEnv
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
 from imitation_agent.utils import load_policy
+from imitation_agent.algorithms import policy_for_bc
 
 # TODO: Add jurgen agent: 'jurgen_agent'
 # EXPERT = ['jurgen_agent']
@@ -59,6 +60,7 @@ def main(args):
             custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
             rng=rng,
             batch_size=args.batch_size,
+            # policy=policy_for_bc(observation_space=envs.observation_space, action_space=envs.action_space),
             device=torch.device(args.device),
         )
 
