@@ -10,7 +10,6 @@ def extract_features(pstate, opponent_state, soccer_state, team_id):
     This works for all the state based agent except jurgen_agent
     """
     # features of ego-vehicle
-    # import pdb; pdb.set_trace()
     kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)
     kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)[[0, 2]]
     kart_center = torch.tensor(pstate['kart']['location'], dtype=torch.float32)[[0, 2]]

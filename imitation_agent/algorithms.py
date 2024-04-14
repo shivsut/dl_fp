@@ -29,7 +29,7 @@ from sb3_local.common.torch_layers import (
     create_mlp,
 )
 from sb3_local.common.type_aliases import PyTorchObs, Schedule
-from sb3_local.common.policies import BasePolicy
+from sb3_local.common.policies import BasePolicy, ActorCriticPolicy
 from sb3_local.common.utils import get_device, is_vectorized_observation, obs_as_tensor
 
 SelfBaseModel = TypeVar("SelfBaseModel", bound="BaseModel")
@@ -410,7 +410,7 @@ class BasePolicy2(BaseModel2, ABC):
         low, high = self.action_space.low, self.action_space.high
         return low + (0.5 * (scaled_action + 1.0) * (high - low))
 
-class ActorCriticPolicy(BasePolicy2):
+class ActorCriticPolicy2(BasePolicy2):
     """
     Policy class for actor-critic algorithms (has both policy and value prediction).
     Used by A2C, PPO and the likes.
@@ -761,6 +761,7 @@ class ActorCriticPolicy(BasePolicy2):
 
 
 class FeedForward512Policy(ActorCriticPolicy):
+    # TODO: replace ActorCriticPolicy with ActorCriticPolicy2 above
     """A feed forward policy network with two hidden layers of 32 units.
 
     This matches the IRL policies in the original AIRL paper.

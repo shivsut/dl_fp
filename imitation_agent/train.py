@@ -16,11 +16,14 @@ from imitation_local.util.util import make_vec_env
 from sb3_local.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
 from sb3_local.common.monitor import Monitor
 from sb3_local.common.vec_env import SubprocVecEnv
+from sb3_local.common.torch_layers import FlattenExtractor
 
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
 from imitation_agent.utils import load_policy
-from imitation_agent.algorithms import policy_for_bc
+from imitation_agent.algorithms import FeedForward512Policy
+from imitation_agent.bc_trainer import BC
+
 
 # TODO: Add jurgen agent: 'jurgen_agent'
 # EXPERT = ['jurgen_agent']
@@ -53,14 +56,21 @@ def main(args):
         # experts 
         experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in [args.expert]}
 
-        # BC trainer
-        bc_trainer = bc.BC(
+        policy = FeedForward512Policy(
+            observation_space=envs.observation_space,
+            action_space=envs.action_space,
+            # Set lr_schedule to max value to force error if policy.optimizer
+            # is used by mistake (should use self.optimizer instead).
+            lr_schedule=lambda _: torch.finfo(torch.float32).max,
+            features_extractor_class=FlattenExtractor,
+        )
+        bc_trainer = BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
             custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
             rng=rng,
             batch_size=args.batch_size,
-            # policy=policy_for_bc(observation_space=envs.observation_space, action_space=envs.action_space),
+            policy=policy,
             device=torch.device(args.device),
         )
 
