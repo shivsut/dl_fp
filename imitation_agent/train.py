@@ -50,7 +50,7 @@ def main(args):
         # experts = [args.expert]
         envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(args.nenv)])
         # experts 
-        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in [args.expert]}
+        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args) for key in [args.expert]}
 
         # BC trainer
         bc_trainer = bc.BC(
@@ -127,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_opponent', action='store_true')
     parser.add_argument('--expert', default='yann_agent')
     parser.add_argument('-d', '--discretization', action='store_true')
+    parser.add_argument('--md', type=int, default=100)
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
     parser.add_argument('--resume_training', type=str)

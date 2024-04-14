@@ -23,7 +23,8 @@ class IceHockeyEnv(BasePolicy):
                  observation_space: spaces.Space,
                 action_space: spaces.Space, 
                 expert_name: str,
-                num_players: int = 2, team: int = 0):
+                num_players: int = 2, team: int = 0,
+                 args=None):
         super().__init__(
             observation_space,
             action_space)
@@ -31,7 +32,7 @@ class IceHockeyEnv(BasePolicy):
         self.num_players = num_players
         self.team = team
         self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
-        self.discrete = discretization()
+        self.discrete = discretization(aceel_div=args.md)
 
     def _predict(self, observation, deterministic: bool = False):
         actions = self.model(observation)

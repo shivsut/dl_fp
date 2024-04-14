@@ -65,7 +65,7 @@ class IceHockeyLearner(gymnasium.Env):
         super(IceHockeyLearner, self).__init__()
         #
         # self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
-        self.discrete = discretization()
+        self.discrete = discretization(aceel_div=args.md)
         self.action_space = spaces.MultiDiscrete(nvec=self.discrete.K_n, start=self.discrete.start)
         # kart_center[0] - 0 to 100 p1_x
         # kart_center[1] - 0 to 100 p2_y
