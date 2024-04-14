@@ -17,39 +17,25 @@ class discretization:
         self.action_low = [0, -1, 0]
         self.action_high = [1, 1, 1]
         self.accel_div = aceel_div
-        self.bins = [np.round(np.linspace(self.action_low[i], self.action_high[i], self.K[i], dtype=float), 3) for i in range(self.naction)]
+        self.bins = torch.tensor([np.round(np.linspace(self.action_low[0], self.action_high[1], self.K[0], dtype=float), 3)])
 
     def __call__(self, x):
         # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html
         # inds =
-        # TODO remove tensor to np conversion
-        if isinstance(x, torch.Tensor):
-            x = x.numpy()
-        closest_actions_idx = [np.abs(self.bins[i] - x[i]).argmin() for i in range(self.naction)]
+        closest_actions_idx = torch.abs(self.bins - x[0]).argmin()
         # discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
         # return self.bins[closest_actions]
-        res = torch.tensor([self.bins[i][j] for i, j in enumerate(closest_actions_idx)])
-        res[0] *= self.accel_div
-        res[0] = int(res[0])
-        if res[1] == -1.0:
-            res[1] = 1.0
-        elif res[1] == 1.0:
-            res[1] = 2.0
-        res[1] = int(res[1])
-        res[2] = int(res[2])
-        return res
+        x[0] = int(self.bins[0,closest_actions_idx] * self.accel_div)
+        x[1] = int(x[1] + 1)
+        x[2] = int(x[2])
+        x = x.to(int)
+        return x
 
     def de_discrete(self, action: np.ndarray) -> np.ndarray:
-        res = []
-
-        res.append(float(action[0])/float(self.accel_div))
-        if action[1] == 2.0:
-            action[1] = 1.0
-        elif action[1] == 1.0:
-            action[1] = -1.0
-        res.append(float(action[1]))
-        res.append(float(action[2]))
-        return np.array(res)
+        action = action.astype(np.float32)
+        action[0] /= float(self.accel_div)
+        action[1] -= 1.0
+        return action
 
 def load_policy(dagger_trainer, path, ckpt='hockey'):
     ckptPath = f"{path}/{ckpt}.pt"
