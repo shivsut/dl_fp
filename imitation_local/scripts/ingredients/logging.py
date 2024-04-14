@@ -11,10 +11,10 @@ from typing import Sequence, Tuple, Union
 import huggingface_sb3 as hfsb3
 import sacred
 
-from imitation.scripts.ingredients import environment, wb
-from imitation.util import logger as imit_logger
-from imitation.util import sacred as sacred_util
-from imitation.util import util
+from imitation_local.scripts.ingredients import environment, wb
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import sacred as sacred_util
+from imitation_local.util import util
 
 logging_ingredient = sacred.Ingredient(
     "logging",
@@ -99,13 +99,13 @@ def setup_logging(
     _run,
     log_format_strs: Sequence[str],
 ) -> Tuple[imit_logger.HierarchicalLogger, pathlib.Path]:
-    """Builds the imitation logger.
+    """Builds the imitation_local logger.
 
     Args:
         log_format_strs: The types of formats to log to.
 
     Returns:
-        The configured imitation logger and `log_dir`.
+        The configured imitation_local logger and `log_dir`.
         Returning `log_dir` avoids the caller needing to capture this value.
     """
     log_dir = make_log_dir()

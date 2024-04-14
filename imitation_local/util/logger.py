@@ -8,10 +8,10 @@ import sys
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple
 
-import stable_baselines3.common.logger as sb_logger
+import sb3_local.common.logger as sb_logger
 
-from imitation.data import types
-from imitation.util import util
+from imitation_local.data import types
+from imitation_local.util import util
 
 
 def make_output_format(
@@ -53,7 +53,7 @@ def _build_output_formats(
     Args:
         folder: Path to directory that logs are written to.
         format_strs: A list of output format strings. For details on available
-            output formats see `stable_baselines3.logger.make_output_format`.
+            output formats see `sb3_local.logger.make_output_format`.
 
     Returns:
         A list of output formats, one corresponding to each `format_strs`.
@@ -141,7 +141,7 @@ class HierarchicalLogger(sb_logger.Logger):
             format_strs: A list of output format strings that should be used by
                 every Logger initialized by this class during an `AccumulatingMeans`
                 context. For details on available output formats see
-                `stable_baselines3.logger.make_output_format`.
+                `sb3_local.logger.make_output_format`.
         """
         self.default_logger = default_logger
         self.current_logger = None
@@ -390,13 +390,13 @@ def configure(
 ) -> HierarchicalLogger:
     """Configure Stable Baselines logger to be `accumulate_means()`-compatible.
 
-    After this function is called, `stable_baselines3.logger.{configure,reset}()`
+    After this function is called, `sb3_local.logger.{configure,reset}()`
     are replaced with stubs that raise RuntimeError.
 
     Args:
-        folder: Argument from `stable_baselines3.logger.configure`.
+        folder: Argument from `sb3_local.logger.configure`.
         format_strs: An list of output format strings. For details on available
-            output formats see `stable_baselines3.logger.make_output_format`.
+            output formats see `sb3_local.logger.make_output_format`.
 
     Returns:
         The configured HierarchicalLogger instance.
@@ -404,7 +404,7 @@ def configure(
     if folder is None:
         tempdir = util.parse_path(tempfile.gettempdir())
         now = datetime.datetime.now()
-        timestamp = now.strftime("imitation-%Y-%m-%d-%H-%M-%S-%f")
+        timestamp = now.strftime("imitation_local-%Y-%m-%d-%H-%M-%S-%f")
         folder = tempdir / timestamp
     else:
         folder = util.parse_path(folder)

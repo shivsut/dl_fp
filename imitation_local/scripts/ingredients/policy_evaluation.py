@@ -8,9 +8,9 @@ from typing import Mapping, Union
 
 import numpy as np
 import sacred
-from stable_baselines3.common import base_class, policies, vec_env
+from sb3_local.common import base_class, policies, vec_env
 
-from imitation.data import rollout
+from imitation_local.data import rollout
 
 policy_evaluation_ingredient = sacred.Ingredient("policy_evaluation")
 
@@ -33,7 +33,7 @@ def eval_policy(
     n_episodes_eval: int,
     _rnd: np.random.Generator,
 ) -> Mapping[str, float]:
-    """Evaluation of imitation learned policy.
+    """Evaluation of imitation_local learned policy.
 
     Has the side effect of setting `rl_algo`'s environment to `venv`
     if it is a `BaseAlgorithm`.
@@ -42,7 +42,7 @@ def eval_policy(
         rl_algo: Algorithm to evaluate.
         venv: Environment to evaluate on.
         n_episodes_eval: The number of episodes to average over when calculating
-            the average episode reward of the imitation policy for return.
+            the average episode reward of the imitation_local policy for return.
         _rnd: Random number generator provided by Sacred.
 
     Returns:

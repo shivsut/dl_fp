@@ -7,9 +7,9 @@ from typing import Mapping, Sequence, cast
 import datasets
 import numpy as np
 
-from imitation.data import huggingface_utils
-from imitation.data.types import AnyPath, Trajectory, TrajectoryWithRew
-from imitation.util import util
+from imitation_local.data import huggingface_utils
+from imitation_local.data.types import AnyPath, Trajectory, TrajectoryWithRew
+from imitation_local.util import util
 
 
 def save(path: AnyPath, trajectories: Sequence[Trajectory]) -> None:

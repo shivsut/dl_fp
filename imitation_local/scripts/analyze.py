@@ -12,10 +12,10 @@ from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence, S
 import pandas as pd
 from sacred.observers import FileStorageObserver
 
-import imitation.util.sacred as sacred_util
-from imitation.scripts.config.analyze import analysis_ex
-from imitation.util import util
-from imitation.util.sacred import dict_get_nested as get
+import imitation_local.util.sacred as sacred_util
+from imitation_local.scripts.config.analyze import analysis_ex
+from imitation_local.util import util
+from imitation_local.util.sacred import dict_get_nested as get
 
 
 @analysis_ex.capture
@@ -246,13 +246,13 @@ def _get_table_entry_fns_subset(table_verbosity: int) -> sd_to_table_entry_type:
 
 
 @analysis_ex.command
-def analyze_imitation(
+def analyze_imitation_local(
     csv_output_path: Optional[str],
     tex_output_path: Optional[str],
     print_table: bool,
     table_verbosity: int,
 ) -> pd.DataFrame:
-    """Parse Sacred logs and generate a DataFrame for imitation learning results.
+    """Parse Sacred logs and generate a DataFrame for imitation_local learning results.
 
     This function calls the helper `_gather_sacred_dicts`, which captures its arguments
     automatically via Sacred. Provide those arguments to select which Sacred

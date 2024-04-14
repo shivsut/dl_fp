@@ -25,10 +25,10 @@ from typing import (
 import gymnasium as gym
 import numpy as np
 import torch as th
-from stable_baselines3.common import monitor, policies
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
+from sb3_local.common import monitor, policies
+from sb3_local.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 
-from imitation.data.types import AnyPath
+from imitation_local.data.types import AnyPath
 
 
 def save_policy(policy: policies.BasePolicy, policy_path: AnyPath) -> None:
@@ -121,13 +121,13 @@ def make_vec_env(
 
     def make_env(i: int, this_seed: int) -> gym.Env:
         # Previously, we directly called `gym.make(env_name)`, but running
-        # `imitation.scripts.train_adversarial` within `imitation.scripts.parallel`
+        # `imitation_local.scripts.train_adversarial` within `imitation_local.scripts.parallel`
         # created a weird interaction between Gym and Ray -- `gym.make` would fail
         # inside this function for any of our custom environment unless those
         # environments were also `gym.register()`ed inside `make_env`. Even
         # registering the custom environment in the scope of `make_vec_env` didn't
         # work. For more discussion and hypotheses on this issue see PR #160:
-        # https://github.com/HumanCompatibleAI/imitation/pull/160.
+        # https://github.com/HumanCompatibleAI/imitation_local/pull/160.
         assert env_make_kwargs is not None  # Note: to satisfy mypy
         assert spec is not None  # Note: to satisfy mypy
         env = gym.make(spec, max_episode_steps=max_episode_steps, **env_make_kwargs)

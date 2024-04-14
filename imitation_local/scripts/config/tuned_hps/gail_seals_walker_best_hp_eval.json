@@ -20,21 +20,21 @@
     "add_std_alpha": null,
     "ensemble_size": null,
     "net_cls": {
-      "py/type": "imitation.rewards.reward_nets.BasicRewardNet"
+      "py/type": "imitation_local.rewards.reward_nets.BasicRewardNet"
     },
     "net_kwargs": {
       "normalize_input_layer": {
-        "py/type": "imitation.util.networks.RunningNorm"
+        "py/type": "imitation_local.util.networks.RunningNorm"
       }
     },
     "normalize_output_layer": {
-      "py/type": "imitation.util.networks.RunningNorm"
+      "py/type": "imitation_local.util.networks.RunningNorm"
     }
   },
   "rl": {
     "batch_size": 16384,
     "rl_cls": {
-      "py/type": "stable_baselines3.ppo.ppo.PPO"
+      "py/type": "sb3_local.ppo.ppo.PPO"
     },
     "rl_kwargs": {
       "batch_size": 128,
@@ -56,11 +56,11 @@
         "py/type": "torch.nn.modules.activation.ReLU"
       },
       "features_extractor_class": {
-        "py/type": "imitation.policies.base.NormalizeFeaturesExtractor"
+        "py/type": "imitation_local.policies.base.NormalizeFeaturesExtractor"
       },
       "features_extractor_kwargs": {
         "normalize_class": {
-          "py/type": "imitation.util.networks.RunningNorm"
+          "py/type": "imitation_local.util.networks.RunningNorm"
         }
       },
       "net_arch": [

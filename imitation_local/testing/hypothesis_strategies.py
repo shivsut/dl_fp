@@ -5,7 +5,7 @@ import gymnasium as gym
 import numpy as np
 from hypothesis import strategies as st
 
-from imitation.data import types
+from imitation_local.data import types
 
 gym_spaces = st.sampled_from(
     [

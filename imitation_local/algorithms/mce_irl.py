@@ -25,13 +25,13 @@ import numpy as np
 import scipy.special
 import torch as th
 from seals import base_envs
-from stable_baselines3.common import policies
+from sb3_local.common import policies
 
-from imitation.algorithms import base
-from imitation.data import rollout, types
-from imitation.rewards import reward_nets
-from imitation.util import logger as imit_logger
-from imitation.util import networks, util
+from imitation_local.algorithms import base
+from imitation_local.data import rollout, types
+from imitation_local.rewards import reward_nets
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import networks, util
 
 
 def mce_partition_fh(

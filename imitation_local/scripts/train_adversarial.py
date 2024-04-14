@@ -9,17 +9,17 @@ import sacred.commands
 import torch as th
 from sacred.observers import FileStorageObserver
 
-from imitation.algorithms.adversarial import airl as airl_algo
-from imitation.algorithms.adversarial import common
-from imitation.algorithms.adversarial import gail as gail_algo
-from imitation.data import rollout
-from imitation.policies import serialize
-from imitation.scripts.config.train_adversarial import train_adversarial_ex
-from imitation.scripts.ingredients import demonstrations, environment
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients import policy_evaluation, reward, rl
+from imitation_local.algorithms.adversarial import airl as airl_algo
+from imitation_local.algorithms.adversarial import common
+from imitation_local.algorithms.adversarial import gail as gail_algo
+from imitation_local.data import rollout
+from imitation_local.policies import serialize
+from imitation_local.scripts.config.train_adversarial import train_adversarial_ex
+from imitation_local.scripts.ingredients import demonstrations, environment
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients import policy_evaluation, reward, rl
 
-logger = logging.getLogger("imitation.scripts.train_adversarial")
+logger = logging.getLogger("imitation_local.scripts.train_adversarial")
 
 
 def save(trainer: common.AdversarialTrainer, save_path: pathlib.Path):
@@ -74,7 +74,7 @@ def train_adversarial(
     checkpoint_interval: int,
     agent_path: Optional[str],
 ) -> Mapping[str, Mapping[str, float]]:
-    """Train an adversarial-network-based imitation learning algorithm.
+    """Train an adversarial-network-based imitation_local learning algorithm.
 
     Checkpoints:
         - AdversarialTrainer train and test RewardNets are saved to
@@ -86,7 +86,7 @@ def train_adversarial(
         show_config: Print the merged config before starting training. This is
             analogous to the print_config command, but will show config after
             rather than before merging `algorithm_specific` arguments.
-        algo_cls: The adversarial imitation learning algorithm to use.
+        algo_cls: The adversarial imitation_local learning algorithm to use.
         algorithm_kwargs: Keyword arguments for the `GAIL` or `AIRL` constructor.
         total_timesteps: The number of transitions to sample from the environment
             during training.
@@ -139,7 +139,7 @@ def train_adversarial(
         algorithm_kwargs = dict(algorithm_kwargs)
         for k in ("shared", "airl", "gail"):
             # Config hook has copied relevant subset of config to top-level.
-            # But due to Sacred limitations, cannot delete the rest of it.
+            # But due to Sacred limitation_locals, cannot delete the rest of it.
             # So do that here to avoid passing in invalid arguments to constructor.
             if k in algorithm_kwargs:
                 del algorithm_kwargs[k]

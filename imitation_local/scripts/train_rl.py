@@ -2,7 +2,7 @@
 
 This can be used:
     1. To train a policy on a ground-truth reward function, as a source of
-       synthetic "expert" demonstrations to train IRL or imitation learning
+       synthetic "expert" demonstrations to train IRL or imitation_local learning
        algorithms.
     2. To train a policy on a learned reward function, to solve a task or
        as a way of evaluating the quality of the learned reward function.
@@ -15,18 +15,18 @@ from typing import Any, Mapping, Optional
 
 import numpy as np
 from sacred.observers import FileStorageObserver
-from stable_baselines3.common import callbacks
-from stable_baselines3.common.vec_env import VecNormalize
+from sb3_local.common import callbacks
+from sb3_local.common.vec_env import VecNormalize
 
-import imitation.data.serialize as data_serialize
-import imitation.policies.serialize as policies_serialize
-from imitation.data import rollout, wrappers
-from imitation.rewards.reward_wrapper import RewardVecEnvWrapper
-from imitation.rewards.serialize import load_reward
-from imitation.scripts.config.train_rl import train_rl_ex
-from imitation.scripts.ingredients import environment
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients import policy_evaluation, rl
+import imitation_local.data.serialize as data_serialize
+import imitation_local.policies.serialize as policies_serialize
+from imitation_local.data import rollout, wrappers
+from imitation_local.rewards.reward_wrapper import RewardVecEnvWrapper
+from imitation_local.rewards.serialize import load_reward
+from imitation_local.scripts.config.train_rl import train_rl_ex
+from imitation_local.scripts.ingredients import environment
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients import policy_evaluation, rl
 
 
 @train_rl_ex.main
@@ -64,10 +64,10 @@ def train_rl(
         reward_type: If provided, then load the serialized reward of this type,
             wrapping the environment in this reward. This is useful to test
             whether a reward model transfers. For more information, see
-            `imitation.rewards.serialize.load_reward`.
+            `imitation_local.rewards.serialize.load_reward`.
         reward_path: A specifier, such as a path to a file on disk, used by
             reward_type to load the reward model. For more information, see
-            `imitation.rewards.serialize.load_reward`.
+            `imitation_local.rewards.serialize.load_reward`.
         load_reward_kwargs: Additional kwargs to pass to `predict_processed`.
             Examples are 'alpha' for :class: `AddSTDRewardWrapper` and 'update_stats'
             for :class: `NormalizedRewardNet`.

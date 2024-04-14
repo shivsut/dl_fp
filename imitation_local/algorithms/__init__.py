@@ -1,1 +1,1 @@
-"""Implementations of imitation and reward learning algorithms."""
+"""Implementations of imitation_local and reward learning algorithms."""

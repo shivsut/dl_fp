@@ -87,7 +87,7 @@ class BaseNorm(nn.Module, abc.ABC):
                 self.update_stats(x)
 
         # Note: this is different from the behavior in stable-baselines, see
-        # https://github.com/HumanCompatibleAI/imitation/issues/442
+        # https://github.com/HumanCompatibleAI/imitation_local/issues/442
         return (x - self.running_mean) / th.sqrt(self.running_var + self.eps)
 
     @abc.abstractmethod
@@ -176,7 +176,7 @@ class EMANorm(BaseNorm):
         """Update `self.running_mean` and `self.running_var` in batch mode.
 
         Reference Algorithm 3 from:
-        https://github.com/HumanCompatibleAI/imitation/files/9456540/Incremental_batch_EMA_and_EMV.pdf
+        https://github.com/HumanCompatibleAI/imitation_local/files/9456540/Incremental_batch_EMA_and_EMV.pdf
 
         Args:
             batch: A batch of data to use to update the running mean and variance.

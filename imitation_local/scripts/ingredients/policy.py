@@ -4,11 +4,11 @@ import logging
 from typing import Any, Mapping, Type
 
 import sacred
-from stable_baselines3.common import policies, utils, vec_env
+from sb3_local.common import policies, utils, vec_env
 
-import imitation.util.networks
-from imitation.policies import base
-from imitation.scripts.ingredients import logging as logging_ingredient
+import imitation_local.util.networks
+from imitation_local.policies import base
+from imitation_local.scripts.ingredients import logging as logging_ingredient
 
 policy_ingredient = sacred.Ingredient(
     "policy",
@@ -34,7 +34,7 @@ def sac():
 NORMALIZE_RUNNING_POLICY_KWARGS = {
     "features_extractor_class": base.NormalizeFeaturesExtractor,
     "features_extractor_kwargs": {
-        "normalize_class": imitation.util.networks.RunningNorm,
+        "normalize_class": imitation_local.util.networks.RunningNorm,
     },
 }
 

@@ -7,11 +7,11 @@ from typing import Optional, Sequence
 
 import sacred
 import torch as th
-from stable_baselines3.common import vec_env
+from sb3_local.common import vec_env
 
-from imitation.algorithms import bc
-from imitation.data import types
-from imitation.scripts.ingredients import policy
+from imitation_local.algorithms import bc
+from imitation_local.data import types
+from imitation_local.scripts.ingredients import policy
 
 bc_ingredient = sacred.Ingredient("bc", ingredients=[policy.policy_ingredient])
 

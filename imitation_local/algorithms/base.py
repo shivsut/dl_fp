@@ -1,4 +1,4 @@
-"""Module of base classes and helper methods for imitation learning algorithms."""
+"""Module of base classes and helper methods for imitation_local learning algorithms."""
 
 import abc
 from typing import (
@@ -14,15 +14,15 @@ from typing import (
 )
 
 import torch.utils.data as th_data
-from stable_baselines3.common import policies
+from sb3_local.common import policies
 
-from imitation.data import rollout, types
-from imitation.util import logger as imit_logger
-from imitation.util import util
+from imitation_local.data import rollout, types
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import util
 
 
-class BaseImitationAlgorithm(abc.ABC):
-    """Base class for all imitation learning algorithms."""
+class Baseimitation_localAlgorithm(abc.ABC):
+    """Base class for all imitation_local learning algorithms."""
 
     _logger: imit_logger.HierarchicalLogger
     """Object to log statistics and natural language messages to."""
@@ -39,7 +39,7 @@ class BaseImitationAlgorithm(abc.ABC):
         custom_logger: Optional[imit_logger.HierarchicalLogger] = None,
         allow_variable_horizon: bool = False,
     ):
-        """Creates an imitation learning algorithm.
+        """Creates an imitation_local learning algorithm.
 
         Args:
             custom_logger: Where to log to; if None (default), creates a new logger.
@@ -48,7 +48,7 @@ class BaseImitationAlgorithm(abc.ABC):
                 training. If True, overrides this safety check. WARNING: variable
                 horizon episodes leak information about the reward via termination
                 condition, and can seriously confound evaluation. Read
-                https://imitation.readthedocs.io/en/latest/getting-started/variable-horizon.html
+                https://imitation_local.readthedocs.io/en/latest/getting-started/variable-horizon.html
                 before overriding this.
         """
         self._logger = custom_logger or imit_logger.configure()
@@ -61,7 +61,7 @@ class BaseImitationAlgorithm(abc.ABC):
                 "Additionally, even unbiased algorithms can exploit "
                 "the information leak from the termination condition, "
                 "producing spuriously high performance. See "
-                "https://imitation.readthedocs.io/en/latest/getting-started/"
+                "https://imitation_local.readthedocs.io/en/latest/getting-started/"
                 "variable-horizon.html for more information.",
             )
         self._horizon = None
@@ -100,9 +100,9 @@ class BaseImitationAlgorithm(abc.ABC):
                 f"Episodes of different length detected: {horizons}. "
                 "Variable horizon environments are discouraged -- "
                 "termination conditions leak information about reward. See "
-                "https://imitation.readthedocs.io/en/latest/getting-started/"
+                "https://imitation_local.readthedocs.io/en/latest/getting-started/"
                 "variable-horizon.html for more information. "
-                "If you are SURE you want to run imitation on a "
+                "If you are SURE you want to run imitation_local on a "
                 "variable horizon task, then please pass in the flag: "
                 "`allow_variable_horizon=True`.",
             )
@@ -129,7 +129,7 @@ AnyTransitions = Union[
 ]
 
 
-class DemonstrationAlgorithm(BaseImitationAlgorithm, Generic[TransitionKind]):
+class DemonstrationAlgorithm(Baseimitation_localAlgorithm, Generic[TransitionKind]):
     """An algorithm that learns from demonstration: BC, IRL, etc."""
 
     def __init__(
@@ -152,7 +152,7 @@ class DemonstrationAlgorithm(BaseImitationAlgorithm, Generic[TransitionKind]):
                 training. If True, overrides this safety check. WARNING: variable
                 horizon episodes leak information about the reward via termination
                 condition, and can seriously confound evaluation. Read
-                https://imitation.readthedocs.io/en/latest/getting-started/variable-horizon.html
+                https://imitation_local.readthedocs.io/en/latest/getting-started/variable-horizon.html
                 before overriding this.
         """
         super().__init__(

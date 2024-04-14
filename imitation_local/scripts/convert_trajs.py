@@ -1,6 +1,6 @@
 """Converts old-style pickle or npz trajectories to new-style HuggingFace datasets.
 
-See https://github.com/HumanCompatibleAI/imitation/pull/448 for a description
+See https://github.com/HumanCompatibleAI/imitation_local/pull/448 for a description
 of the new trajectory format.
 
 This script takes as command-line input multiple paths to saved trajectories,
@@ -12,19 +12,19 @@ extension (i.e. "A.pkl" -> "A/", "A.npz" -> "A/", "A/" -> "A/", "A.foo" -> "A/")
 import pathlib
 import warnings
 
-from imitation.data import huggingface_utils, serialize, types
-from imitation.util import util
+from imitation_local.data import huggingface_utils, serialize, types
+from imitation_local.util import util
 
 
 def update_traj_file_in_place(path_str: types.AnyPath, /) -> pathlib.Path:
     """Converts pickle or npz file to the new HuggingFace format.
 
-    The new data is saved as `Sequence[imitation.types.TrajectoryWithRew]`.
+    The new data is saved as `Sequence[imitation_local.types.TrajectoryWithRew]`.
 
     Args:
         path_str: Path to a pickle or npz file containing
-            `Sequence[imitation.types.Trajectory]`
-            or `Sequence[imitation.old_types.TrajectoryWithRew]`.
+            `Sequence[imitation_local.types.Trajectory]`
+            or `Sequence[imitation_local.old_types.TrajectoryWithRew]`.
 
     Returns:
         The path to the converted trajectory dataset.

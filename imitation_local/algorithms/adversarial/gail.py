@@ -1,14 +1,14 @@
-"""Generative Adversarial Imitation Learning (GAIL)."""
+"""Generative Adversarial imitation_local Learning (GAIL)."""
 
 from typing import Optional
 
 import torch as th
-from stable_baselines3.common import base_class, vec_env
+from sb3_local.common import base_class, vec_env
 from torch.nn import functional as F
 
-from imitation.algorithms import base
-from imitation.algorithms.adversarial import common
-from imitation.rewards import reward_nets
+from imitation_local.algorithms import base
+from imitation_local.algorithms.adversarial import common
+from imitation_local.rewards import reward_nets
 
 
 class RewardNetFromDiscriminatorLogit(reward_nets.RewardNet):
@@ -84,7 +84,7 @@ class RewardNetFromDiscriminatorLogit(reward_nets.RewardNet):
 
 
 class GAIL(common.AdversarialTrainer):
-    """Generative Adversarial Imitation Learning (`GAIL`_).
+    """Generative Adversarial imitation_local Learning (`GAIL`_).
 
     .. _GAIL: https://arxiv.org/abs/1606.03476
     """
@@ -99,7 +99,7 @@ class GAIL(common.AdversarialTrainer):
         reward_net: reward_nets.RewardNet,
         **kwargs,
     ):
-        """Generative Adversarial Imitation Learning.
+        """Generative Adversarial imitation_local Learning.
 
         Args:
             demonstrations: Demonstrations from an expert (optional). Transitions

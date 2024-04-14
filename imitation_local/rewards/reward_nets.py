@@ -7,10 +7,10 @@ import gymnasium as gym
 import numpy as np
 import torch as th
 from gymnasium import spaces
-from stable_baselines3.common import preprocessing
+from sb3_local.common import preprocessing
 from torch import nn
 
-from imitation.util import networks, util
+from imitation_local.util import networks, util
 
 
 class RewardNet(nn.Module, abc.ABC):
@@ -742,7 +742,7 @@ class BasicShapedRewardNet(ShapedRewardNet):
     This is just a very simple convenience class for instantiating a BasicRewardNet
     and a BasicPotentialMLP and wrapping them inside a ShapedRewardNet.
     Mainly exists for backwards compatibility after
-    https://github.com/HumanCompatibleAI/imitation/pull/311
+    https://github.com/HumanCompatibleAI/imitation_local/pull/311
     to keep the scripts working.
 
     TODO(ejnnr): if we ever modify AIRL so that it takes in a RewardNet instance

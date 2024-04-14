@@ -4,9 +4,9 @@
 import sacred
 from torch import nn
 
-from imitation.scripts.ingredients import environment
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients import policy_evaluation, rl
+from imitation_local.scripts.ingredients import environment
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients import policy_evaluation, rl
 
 # Note: All the hyperparameter configs in the file are tuned
 # for the PPO algorithm on the respective environment using the

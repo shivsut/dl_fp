@@ -482,7 +482,7 @@ class TransitionsMinimal(th_data.Dataset, Sequence[Mapping[str, np.ndarray]]):
     """A Torch-compatible `Dataset` of obs-act transitions.
 
     This class and its subclasses are usually instantiated via
-    `imitation.data.rollout.flatten_trajectories`.
+    `imitation_local.data.rollout.flatten_trajectories`.
 
     Indexing an instance `trans` of TransitionsMinimal with an integer `i`
     returns the `i`th `Dict[str, np.ndarray]` sample, whose keys are the field

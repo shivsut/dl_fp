@@ -1,4 +1,4 @@
-"""Core code for adversarial imitation learning, shared between GAIL and AIRL."""
+"""Core code for adversarial imitation_local learning, shared between GAIL and AIRL."""
 import abc
 import dataclasses
 import logging
@@ -8,20 +8,20 @@ import numpy as np
 import torch as th
 import torch.utils.tensorboard as thboard
 import tqdm
-from stable_baselines3.common import (
+from sb3_local.common import (
     base_class,
     distributions,
     on_policy_algorithm,
     policies,
     vec_env,
 )
-from stable_baselines3.sac import policies as sac_policies
+from sb3_local.sac import policies as sac_policies
 from torch.nn import functional as F
 
-from imitation.algorithms import base
-from imitation.data import buffer, rollout, types, wrappers
-from imitation.rewards import reward_nets, reward_wrapper
-from imitation.util import logger, networks, util
+from imitation_local.algorithms import base
+from imitation_local.data import buffer, rollout, types, wrappers
+from imitation_local.rewards import reward_nets, reward_wrapper
+from imitation_local.util import logger, networks, util
 
 
 def compute_train_stats(
@@ -93,7 +93,7 @@ def compute_train_stats(
 
 
 class AdversarialTrainer(base.DemonstrationAlgorithm[types.Transitions]):
-    """Base class for adversarial imitation learning algorithms like GAIL and AIRL."""
+    """Base class for adversarial imitation_local learning algorithms like GAIL and AIRL."""
 
     venv: vec_env.VecEnv
     """The original vectorized environment."""
@@ -182,7 +182,7 @@ class AdversarialTrainer(base.DemonstrationAlgorithm[types.Transitions]):
                 training. If True, overrides this safety check. WARNING: variable
                 horizon episodes leak information about the reward via termination
                 condition, and can seriously confound evaluation. Read
-                https://imitation.readthedocs.io/en/latest/guide/variable_horizon.html
+                https://imitation_local.readthedocs.io/en/latest/guide/variable_horizon.html
                 before overriding this.
 
         Raises:

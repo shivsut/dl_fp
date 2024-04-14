@@ -11,18 +11,18 @@ from typing import Any, Mapping, Optional, Type, Union
 import numpy as np
 import torch as th
 from sacred.observers import FileStorageObserver
-from stable_baselines3.common import type_aliases
+from sb3_local.common import type_aliases
 
-import imitation.data.serialize as data_serialize
-import imitation.policies.serialize as policies_serialize
-from imitation.algorithms import preference_comparisons
-from imitation.scripts.config.train_preference_comparisons import (
+import imitation_local.data.serialize as data_serialize
+import imitation_local.policies.serialize as policies_serialize
+from imitation_local.algorithms import preference_comparisons
+from imitation_local.scripts.config.train_preference_comparisons import (
     train_preference_comparisons_ex,
 )
-from imitation.scripts.ingredients import environment
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients import policy_evaluation, reward
-from imitation.scripts.ingredients import rl as rl_common
+from imitation_local.scripts.ingredients import environment
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients import policy_evaluation, reward
+from imitation_local.scripts.ingredients import rl as rl_common
 
 
 def save_model(
@@ -133,7 +133,7 @@ def train_preference_comparisons(
             training. If True, overrides this safety check. WARNING: variable
             horizon episodes leak information about the reward via termination
             condition, and can seriously confound evaluation. Read
-            https://imitation.readthedocs.io/en/latest/guide/variable_horizon.html
+            https://imitation_local.readthedocs.io/en/latest/guide/variable_horizon.html
             before overriding this.
         checkpoint_interval: Save the reward model and policy models (if
             trajectory_generator contains a policy) every `checkpoint_interval`

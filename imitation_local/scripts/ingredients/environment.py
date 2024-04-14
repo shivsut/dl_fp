@@ -4,10 +4,10 @@ from typing import Any, Generator, Mapping
 
 import numpy as np
 import sacred
-from stable_baselines3.common import vec_env
+from sb3_local.common import vec_env
 
-from imitation.data import wrappers
-from imitation.util import util
+from imitation_local.data import wrappers
+from imitation_local.util import util
 
 environment_ingredient = sacred.Ingredient("environment")
 

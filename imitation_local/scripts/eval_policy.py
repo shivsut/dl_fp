@@ -8,16 +8,16 @@ from typing import Any, Mapping, Optional
 import gymnasium as gym
 import numpy as np
 from sacred.observers import FileStorageObserver
-from stable_baselines3.common.vec_env import VecEnvWrapper
+from sb3_local.common.vec_env import VecEnvWrapper
 
-from imitation.data import rollout, serialize
-from imitation.policies.exploration_wrapper import ExplorationWrapper
-from imitation.rewards import reward_wrapper
-from imitation.rewards.serialize import load_reward
-from imitation.scripts.config.eval_policy import eval_policy_ex
-from imitation.scripts.ingredients import environment, expert
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.util import video_wrapper
+from imitation_local.data import rollout, serialize
+from imitation_local.policies.exploration_wrapper import ExplorationWrapper
+from imitation_local.rewards import reward_wrapper
+from imitation_local.rewards.serialize import load_reward
+from imitation_local.scripts.config.eval_policy import eval_policy_ex
+from imitation_local.scripts.ingredients import environment, expert
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.util import video_wrapper
 
 
 class InteractiveRender(VecEnvWrapper):
@@ -90,7 +90,7 @@ def eval_policy(
             do not wrap.
 
     Returns:
-        Return value of `imitation.util.rollout.rollout_stats()`.
+        Return value of `imitation_local.util.rollout.rollout_stats()`.
     """
     log_dir = logging_ingredient.make_log_dir()
     sample_until = rollout.make_sample_until(eval_n_timesteps, eval_n_episodes)

@@ -1,16 +1,16 @@
-"""Configuration for imitation.scripts.train_preference_comparisons."""
+"""Configuration for imitation_local.scripts.train_preference_comparisons."""
 
 import sacred
 from torch import nn
 
-from imitation.algorithms import preference_comparisons
-from imitation.scripts.ingredients import environment
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients import policy_evaluation, reward, rl
+from imitation_local.algorithms import preference_comparisons
+from imitation_local.scripts.ingredients import environment
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients import policy_evaluation, reward, rl
 
 # Note: All the hyperparameter configs in the file are of the tuned
 # hyperparameters of the RL algorithm of the respective environment.
-# Taken from imitation/scripts/config/train_rl.py
+# Taken from imitation_local/scripts/config/train_rl.py
 
 train_preference_comparisons_ex = sacred.Experiment(
     "train_preference_comparisons",

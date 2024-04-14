@@ -19,12 +19,12 @@ from typing import (
 
 import numpy as np
 from gymnasium import spaces
-from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.policies import BasePolicy
-from stable_baselines3.common.utils import check_for_correct_spaces
-from stable_baselines3.common.vec_env import VecEnv
+from sb3_local.common.base_class import BaseAlgorithm
+from sb3_local.common.policies import BasePolicy
+from sb3_local.common.utils import check_for_correct_spaces
+from sb3_local.common.vec_env import VecEnv
 
-from imitation.data import types
+from imitation_local.data import types
 
 
 def unwrap_traj(traj: types.TrajectoryWithRew) -> types.TrajectoryWithRew:
@@ -34,7 +34,7 @@ def unwrap_traj(traj: types.TrajectoryWithRew) -> types.TrajectoryWithRew:
     `obs` and `rews`.
 
     Fails if `infos` is None or if the trajectory was generated from an
-    environment without imitation.data.wrappers.RolloutInfoWrapper
+    environment without imitation_local.data.wrappers.RolloutInfoWrapper
 
     Args:
         traj: A trajectory generated from `RolloutInfoWrapper`-wrapped Environments.
@@ -368,7 +368,7 @@ def policy_to_callable(
             raise ValueError(
                 "Policy and environment observation shape mismatch. "
                 "This is likely caused by "
-                "https://github.com/HumanCompatibleAI/imitation/issues/599. "
+                "https://github.com/HumanCompatibleAI/imitation_local/issues/599. "
                 "If encountering this from rollout.rollout, try calling:\n"
                 "rollout.rollout(expert, expert.get_env(), ...) instead of\n"
                 "rollout.rollout(expert, env, ...)\n\n"
@@ -391,7 +391,7 @@ def generate_trajectories(
 
     Args:
         policy: Can be any of the following:
-            1) A stable_baselines3 policy or algorithm trained on the gym environment.
+            1) A sb3_local policy or algorithm trained on the gym environment.
             2) A Callable that takes an ndarray of observations and returns an ndarray
             of corresponding actions.
             3) None, in which case actions will be sampled randomly.
@@ -634,7 +634,7 @@ def generate_transitions(
 
     Args:
         policy: Can be any of the following:
-            - A stable_baselines3 policy or algorithm trained on the gym environment
+            - A sb3_local policy or algorithm trained on the gym environment
             - A Callable that takes an ndarray of observations and returns an ndarray
             of corresponding actions
             - None, in which case actions will be sampled randomly
@@ -687,7 +687,7 @@ def rollout(
 
     Args:
         policy: Can be any of the following:
-            1) A stable_baselines3 policy or algorithm trained on the gym environment.
+            1) A sb3_local policy or algorithm trained on the gym environment.
             2) A Callable that takes an ndarray of observations and returns an ndarray
             of corresponding actions.
             3) None, in which case actions will be sampled randomly.

@@ -5,7 +5,7 @@ import datasets
 import jsonpickle
 import numpy as np
 
-from imitation.data import types
+from imitation_local.data import types
 
 
 class TrajectoryDatasetSequence(Sequence[types.Trajectory]):

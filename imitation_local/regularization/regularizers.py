@@ -7,8 +7,8 @@ import numpy as np
 import torch as th
 from torch import optim
 
-from imitation.regularization import updaters
-from imitation.util import logger as imit_logger
+from imitation_local.regularization import updaters
+from imitation_local.util import logger as imit_logger
 
 # this is not actually a scalar, dimension check is still required for tensor.
 Scalar = Union[th.Tensor, float]

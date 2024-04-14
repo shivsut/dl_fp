@@ -1,4 +1,4 @@
-"""Soft Q Imitation Learning (SQIL) (https://arxiv.org/abs/1905.11108).
+"""Soft Q imitation_local Learning (SQIL) (https://arxiv.org/abs/1905.11108).
 
 Trains a policy via DQN-style Q-learning,
 replacing half the buffer with expert demonstrations and adjusting the rewards.
@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Optional, Type, Union
 import numpy as np
 import torch as th
 from gymnasium import spaces
-from stable_baselines3 import dqn
-from stable_baselines3.common import (
+from sb3_local import dqn
+from sb3_local.common import (
     buffers,
     off_policy_algorithm,
     policies,
@@ -18,13 +18,13 @@ from stable_baselines3.common import (
     vec_env,
 )
 
-from imitation.algorithms import base as algo_base
-from imitation.data import rollout, types
-from imitation.util import logger, util
+from imitation_local.algorithms import base as algo_base
+from imitation_local.data import rollout, types
+from imitation_local.util import logger, util
 
 
 class SQIL(algo_base.DemonstrationAlgorithm[types.Transitions]):
-    """Soft Q Imitation Learning (SQIL).
+    """Soft Q imitation_local Learning (SQIL).
 
     Trains a policy via DQN-style Q-learning,
     replacing half the buffer with expert demonstrations and adjusting the rewards.

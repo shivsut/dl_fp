@@ -5,7 +5,7 @@ import importlib
 from typing import Callable, Generic, Iterable, Optional, TypeVar
 
 import gymnasium as gym
-from stable_baselines3.common.vec_env import VecEnv
+from sb3_local.common.vec_env import VecEnv
 
 T = TypeVar("T")
 LoaderFn = Callable[..., T]

@@ -3,10 +3,10 @@
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
-from stable_baselines3.common import vec_env
+from sb3_local.common import vec_env
 
-from imitation.data import rollout
-from imitation.util import util
+from imitation_local.data import rollout
+from imitation_local.util import util
 
 
 class ExplorationWrapper:

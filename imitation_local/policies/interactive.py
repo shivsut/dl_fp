@@ -8,10 +8,10 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 from shimmy import atari_env
-from stable_baselines3.common import vec_env
+from sb3_local.common import vec_env
 
-import imitation.policies.base as base_policies
-from imitation.util import util
+import imitation_local.policies.base as base_policies
+from imitation_local.util import util
 
 
 class DiscreteInteractivePolicy(base_policies.NonTrainablePolicy, abc.ABC):

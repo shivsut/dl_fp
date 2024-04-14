@@ -27,25 +27,25 @@ from typing import (
 import numpy as np
 import torch as th
 from scipy import special
-from stable_baselines3.common import base_class, type_aliases, utils, vec_env
+from sb3_local.common import base_class, type_aliases, utils, vec_env
 from torch import nn
 from torch.utils import data as data_th
 from tqdm.auto import tqdm
 
-from imitation.algorithms import base
-from imitation.data import rollout, types, wrappers
-from imitation.data.types import (
+from imitation_local.algorithms import base
+from imitation_local.data import rollout, types, wrappers
+from imitation_local.data.types import (
     AnyPath,
     TrajectoryPair,
     TrajectoryWithRew,
     TrajectoryWithRewPair,
     Transitions,
 )
-from imitation.policies import exploration_wrapper
-from imitation.regularization import regularizers
-from imitation.rewards import reward_function, reward_nets, reward_wrapper
-from imitation.util import logger as imit_logger
-from imitation.util import networks, util
+from imitation_local.policies import exploration_wrapper
+from imitation_local.regularization import regularizers
+from imitation_local.rewards import reward_function, reward_nets, reward_wrapper
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import networks, util
 
 
 class TrajectoryGenerator(abc.ABC):
@@ -1177,7 +1177,7 @@ class BasicRewardTrainer(RewardTrainer):
             regularizer_factory: if you would like to apply regularization during
                 training, specify a regularizer factory here. The factory will be
                 used to construct a regularizer. See
-                ``imitation.regularization.RegularizerFactory`` for more details.
+                ``imitation_local.regularization.RegularizerFactory`` for more details.
 
         Raises:
             ValueError: if the batch size is not a multiple of the minibatch size.
@@ -1479,7 +1479,7 @@ QUERY_SCHEDULES: Dict[str, type_aliases.Schedule] = {
 }
 
 
-class PreferenceComparisons(base.BaseImitationAlgorithm):
+class PreferenceComparisons(base.Baseimitation_localAlgorithm):
     """Main interface for reward learning using preference comparisons."""
 
     def __init__(
@@ -1550,7 +1550,7 @@ class PreferenceComparisons(base.BaseImitationAlgorithm):
                 training. If True, overrides this safety check. WARNING: variable
                 horizon episodes leak information about the reward via termination
                 condition, and can seriously confound evaluation. Read
-                https://imitation.readthedocs.io/en/latest/guide/variable_horizon.html
+                https://imitation_local.readthedocs.io/en/latest/guide/variable_horizon.html
                 before overriding this.
             rng: random number generator to use for initializing subcomponents such as
                 fragmenter.

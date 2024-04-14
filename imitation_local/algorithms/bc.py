@@ -23,13 +23,13 @@ import gymnasium as gym
 import numpy as np
 import torch as th
 import tqdm
-from stable_baselines3.common import policies, torch_layers, utils, vec_env
+from sb3_local.common import policies, torch_layers, utils, vec_env
 
-from imitation.algorithms import base as algo_base
-from imitation.data import rollout, types
-from imitation.policies import base as policy_base
-from imitation.util import logger as imit_logger
-from imitation.util import util
+from imitation_local.algorithms import base as algo_base
+from imitation_local.data import rollout, types
+from imitation_local.policies import base as policy_base
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import util
 
 
 @dataclasses.dataclass(frozen=True)

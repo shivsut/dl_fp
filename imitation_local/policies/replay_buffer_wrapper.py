@@ -4,11 +4,11 @@ from typing import Mapping, Type
 
 import numpy as np
 from gymnasium import spaces
-from stable_baselines3.common.buffers import ReplayBuffer
-from stable_baselines3.common.type_aliases import ReplayBufferSamples
+from sb3_local.common.buffers import ReplayBuffer
+from sb3_local.common.type_aliases import ReplayBufferSamples
 
-from imitation.rewards.reward_function import RewardFn
-from imitation.util import util
+from imitation_local.rewards.reward_function import RewardFn
+from imitation_local.util import util
 
 
 def _samples_to_reward_fn_input(
@@ -49,7 +49,7 @@ class ReplayBufferRewardWrapper(ReplayBuffer):
         # Note(yawen-d): we directly inherit ReplayBuffer and leave out the case of
         # DictReplayBuffer because the current RewardFn only takes in NumPy array-based
         # inputs, and SAC is the only use case for ReplayBuffer relabeling. See:
-        # https://github.com/HumanCompatibleAI/imitation/pull/459#issuecomment-1201997194
+        # https://github.com/HumanCompatibleAI/imitation_local/pull/459#issuecomment-1201997194
         assert replay_buffer_class is ReplayBuffer, "only ReplayBuffer is supported"
         assert not isinstance(observation_space, spaces.Dict)
         self.replay_buffer = replay_buffer_class(

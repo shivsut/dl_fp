@@ -1,4 +1,4 @@
-from stable_baselines3.common.policies import BasePolicy
+from sb3_local.common.policies import BasePolicy
 import numpy as np
 from gymnasium import spaces
 from typing import Any, Dict, List, Optional, Tuple, Union

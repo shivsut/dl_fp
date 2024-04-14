@@ -5,10 +5,10 @@ import typing
 from typing import Any, Mapping, Optional, Type
 
 import sacred
-from stable_baselines3.common import vec_env
+from sb3_local.common import vec_env
 
-from imitation.rewards import reward_nets
-from imitation.util import networks
+from imitation_local.rewards import reward_nets
+from imitation_local.util import networks
 
 reward_ingredient = sacred.Ingredient("reward")
 logger = logging.getLogger(__name__)

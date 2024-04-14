@@ -10,8 +10,8 @@ from pandas.api import types as pd_types
 from ray.tune.search import optuna
 from sacred.observers import FileStorageObserver
 
-from imitation.scripts.config.parallel import parallel_ex
-from imitation.scripts.config.tuning import tuning_ex
+from imitation_local.scripts.config.parallel import parallel_ex
+from imitation_local.scripts.config.tuning import tuning_ex
 
 
 @tuning_ex.main
@@ -20,7 +20,7 @@ def tune(
     eval_best_trial_resource_multiplier: int = 1,
     num_eval_seeds: int = 5,
 ) -> None:
-    """Tune hyperparameters of imitation algorithms using the parallel script.
+    """Tune hyperparameters of imitation_local algorithms using the parallel script.
 
     The parallel script is called twice in this function. The first call is to
     tune the hyperparameters. The second call is to evaluate the best trial on

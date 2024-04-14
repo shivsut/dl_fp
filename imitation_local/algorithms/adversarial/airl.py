@@ -2,12 +2,12 @@
 from typing import Optional
 
 import torch as th
-from stable_baselines3.common import base_class, policies, vec_env
-from stable_baselines3.sac import policies as sac_policies
+from sb3_local.common import base_class, policies, vec_env
+from sb3_local.sac import policies as sac_policies
 
-from imitation.algorithms import base
-from imitation.algorithms.adversarial import common
-from imitation.rewards import reward_nets
+from imitation_local.algorithms import base
+from imitation_local.algorithms.adversarial import common
+from imitation_local.rewards import reward_nets
 
 STOCHASTIC_POLICIES = (sac_policies.SACPolicy, policies.ActorCriticPolicy)
 

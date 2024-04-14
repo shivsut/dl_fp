@@ -8,8 +8,8 @@ import warnings
 from typing import Any, Dict, Mapping, Optional, Type
 
 import sacred
-import stable_baselines3 as sb3
-from stable_baselines3.common import (
+import sb3_local as sb3
+from sb3_local.common import (
     base_class,
     buffers,
     off_policy_algorithm,
@@ -17,11 +17,11 @@ from stable_baselines3.common import (
     vec_env,
 )
 
-from imitation.policies import serialize
-from imitation.policies.replay_buffer_wrapper import ReplayBufferRewardWrapper
-from imitation.rewards.reward_function import RewardFn
-from imitation.scripts.ingredients import logging as logging_ingredient
-from imitation.scripts.ingredients.policy import policy_ingredient
+from imitation_local.policies import serialize
+from imitation_local.policies.replay_buffer_wrapper import ReplayBufferRewardWrapper
+from imitation_local.rewards.reward_function import RewardFn
+from imitation_local.scripts.ingredients import logging as logging_ingredient
+from imitation_local.scripts.ingredients.policy import policy_ingredient
 
 rl_ingredient = sacred.Ingredient(
     "rl",
@@ -42,7 +42,7 @@ def config():
 def config_hook(config, command_name, logger):
     """Sets defaults equivalent to sb3.PPO default hyperparameters.
 
-    This hook is a no-op if command_name is "sqil" (used only in train_imitation),
+    This hook is a no-op if command_name is "sqil" (used only in train_imitation_local),
     which has its own config hook.
 
     Args:

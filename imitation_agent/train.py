@@ -6,16 +6,16 @@ import numpy as np
 import gymnasium as gym
 from imitation_local.policies.base import FeedForward32Policy
 from imitation_local.util.logger import HierarchicalLogger
-from stable_baselines3.common.evaluation import evaluate_policy
+from sb3_local.common.evaluation import evaluate_policy
 import imitation_local.data.rollout as rollout
 
 from imitation_local.algorithms import bc
 from imitation_local.algorithms.dagger import SimpleDAggerTrainer
 from imitation_local.policies.serialize import load_policy
 from imitation_local.util.util import make_vec_env
-from stable_baselines3.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from sb3_local.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
+from sb3_local.common.monitor import Monitor
+from sb3_local.common.vec_env import SubprocVecEnv
 
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv

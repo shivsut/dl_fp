@@ -16,8 +16,8 @@ The supported policy types are:
 """
 import sacred
 
-from imitation.policies import serialize
-from imitation.scripts.ingredients import environment
+from imitation_local.policies import serialize
+from imitation_local.scripts.ingredients import environment
 
 expert_ingredient = sacred.Ingredient(
     "expert",
@@ -29,7 +29,7 @@ expert_ingredient = sacred.Ingredient(
 def config():
     # [ppo, sac, random, zero, ppo-huggingface, sac-huggingface] or your own.
     policy_type = "ppo-huggingface"
-    # See imitation.policies.serialize.load_policy for options.
+    # See imitation_local.policies.serialize.load_policy for options.
     loader_kwargs = dict()
     locals()  # quieten flake8
 

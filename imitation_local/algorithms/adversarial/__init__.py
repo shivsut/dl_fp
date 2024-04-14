@@ -1,1 +1,1 @@
-"""Adversarial imitation learning algorithms, AIRL and GAIL."""
+"""Adversarial imitation_local learning algorithms, AIRL and GAIL."""

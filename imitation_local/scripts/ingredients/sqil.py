@@ -1,9 +1,9 @@
 """This ingredient provides a SQIL algorithm instance."""
 import sacred
-from stable_baselines3 import dqn as dqn_algorithm
+from sb3_local import dqn as dqn_algorithm
 
-from imitation.policies import base
-from imitation.scripts.ingredients import policy, rl
+from imitation_local.policies import base
+from imitation_local.scripts.ingredients import policy, rl
 
 sqil_ingredient = sacred.Ingredient(
     "sqil",

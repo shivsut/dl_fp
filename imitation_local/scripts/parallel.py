@@ -12,7 +12,7 @@ from ray.tune import search
 from ray.tune.search import optuna
 from sacred.observers import FileStorageObserver
 
-from imitation.scripts.config.parallel import parallel_ex
+from imitation_local.scripts.config.parallel import parallel_ex
 
 
 @parallel_ex.main
@@ -37,7 +37,7 @@ def parallel(
 
     Args:
         sacred_ex_name: The Sacred experiment to tune. Either "train_rl",
-            "train_imitation", "train_adversarial" or "train_preference_comparisons".
+            "train_imitation_local", "train_adversarial" or "train_preference_comparisons".
         run_name: A name describing this parallelizing experiment.
             This argument is also passed to `ray.tune.run` as the `name` argument.
             It is also saved in 'sacred/run.json' of each inner Sacred experiment
@@ -208,17 +208,17 @@ def _ray_tune_sacred_wrapper(
         updated_run_kwargs: Dict[str, Any] = {}
         # Import inside function rather than in module because Sacred experiments
         # are not picklable, and Ray requires this function to be picklable.
-        from imitation.scripts.train_adversarial import train_adversarial_ex
-        from imitation.scripts.train_imitation import train_imitation_ex
-        from imitation.scripts.train_preference_comparisons import (
+        from imitation_local.scripts.train_adversarial import train_adversarial_ex
+        from imitation_local.scripts.train_imitation_local import train_imitation_local_ex
+        from imitation_local.scripts.train_preference_comparisons import (
             train_preference_comparisons_ex,
         )
-        from imitation.scripts.train_rl import train_rl_ex
+        from imitation_local.scripts.train_rl import train_rl_ex
 
         experiments = {
             "train_rl": train_rl_ex,
             "train_adversarial": train_adversarial_ex,
-            "train_imitation": train_imitation_ex,
+            "train_imitation_local": train_imitation_local_ex,
             "train_preference_comparisons": train_preference_comparisons_ex,
         }
         ex = experiments[sacred_ex_name]

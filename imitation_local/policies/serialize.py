@@ -8,10 +8,10 @@ import pathlib
 from typing import Callable, Type, TypeVar
 
 import huggingface_sb3 as hfsb3
-from stable_baselines3.common import base_class, callbacks, policies, vec_env
+from sb3_local.common import base_class, callbacks, policies, vec_env
 
-from imitation.policies import base
-from imitation.util import registry, util
+from imitation_local.policies import base
+from imitation_local.util import registry, util
 
 Algorithm = TypeVar("Algorithm", bound=base_class.BaseAlgorithm)
 
@@ -19,10 +19,10 @@ Algorithm = TypeVar("Algorithm", bound=base_class.BaseAlgorithm)
 # proper way to specify this in python yet. For details see
 # https://stackoverflow.com/questions/61569324/type-annotation-for-callable-that-takes-kwargs
 # TODO(juan) this can be fixed using ParamSpec
-#  (https://github.com/HumanCompatibleAI/imitation/issues/574)
+#  (https://github.com/HumanCompatibleAI/imitation_local/issues/574)
 PolicyLoaderFn = Callable[..., policies.BasePolicy]
 """A policy loader function that takes a VecEnv before any other custom arguments and
-returns a stable_baselines3 base policy policy."""
+returns a sb3_local base policy policy."""
 
 policy_registry: registry.Registry[PolicyLoaderFn] = registry.Registry()
 """Registry of policy loading functions. Add your own here if desired."""
@@ -77,7 +77,7 @@ def _load_stable_baselines_from_file(
     """Creates a policy loading function to read a policy from a file.
 
     Args:
-        cls: The RL algorithm, e.g. `stable_baselines3.PPO`.
+        cls: The RL algorithm, e.g. `sb3_local.PPO`.
 
     Returns:
         A function loading policies trained via cls.
@@ -99,7 +99,7 @@ def _load_stable_baselines_from_huggingface(
 
     Args:
         algo_name: The name of the algorithm, e.g. `ppo`.
-        cls: The RL algorithm, e.g. `stable_baselines3.PPO`.
+        cls: The RL algorithm, e.g. `sb3_local.PPO`.
 
     Returns:
         A function loading policies trained via cls.
@@ -145,8 +145,8 @@ def _add_stable_baselines_policies_from_huggingface(classes):
 
 
 STABLE_BASELINES_CLASSES = {
-    "ppo": "stable_baselines3:PPO",
-    "sac": "stable_baselines3:SAC",
+    "ppo": "sb3_local:PPO",
+    "sac": "sb3_local:SAC",
 }
 _add_stable_baselines_policies_from_file(STABLE_BASELINES_CLASSES)
 _add_stable_baselines_policies_from_huggingface(STABLE_BASELINES_CLASSES)

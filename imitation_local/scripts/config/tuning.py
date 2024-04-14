@@ -4,8 +4,8 @@ import ray.tune as tune
 import sacred
 from torch import nn
 
-from imitation.algorithms import dagger as dagger_alg
-from imitation.scripts.parallel import parallel_ex
+from imitation_local.algorithms import dagger as dagger_alg
+from imitation_local.scripts.parallel import parallel_ex
 
 tuning_ex = sacred.Experiment("tuning", ingredients=[parallel_ex])
 
@@ -39,7 +39,7 @@ def rl():
 @tuning_ex.named_config
 def bc():
     parallel_run_config = dict(
-        sacred_ex_name="train_imitation",
+        sacred_ex_name="train_imitation_local",
         run_name="bc_tuning",
         base_named_configs=["logging.wandb_logging"],
         base_config_updates={
@@ -73,7 +73,7 @@ def bc():
 @tuning_ex.named_config
 def dagger():
     parallel_run_config = dict(
-        sacred_ex_name="train_imitation",
+        sacred_ex_name="train_imitation_local",
         run_name="dagger_tuning",
         base_named_configs=["logging.wandb_logging"],
         base_config_updates={

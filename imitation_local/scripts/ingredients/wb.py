@@ -15,7 +15,7 @@ def wandb_config():
     wandb_tag = None  # User-specified tag for this run
     wandb_name_prefix = ""  # User-specified prefix for the run name
     wandb_kwargs = dict(
-        project="imitation",
+        project="imitation_local",
         monitor_gym=False,
         save_code=False,
     )  # Other kwargs to pass to wandb.init()

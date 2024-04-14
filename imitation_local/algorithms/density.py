@@ -1,4 +1,4 @@
-"""Density-based baselines for imitation learning.
+"""Density-based baselines for imitation_local learning.
 
 Each of these algorithms learns a density estimate on some aspect of the demonstrations,
 then rewards the agent for following that estimate.
@@ -12,13 +12,13 @@ from typing import Any, Dict, Iterable, List, Optional, cast
 import numpy as np
 from gymnasium.spaces import utils as space_utils
 from sklearn import neighbors, preprocessing
-from stable_baselines3.common import base_class, vec_env
+from sb3_local.common import base_class, vec_env
 
-from imitation.algorithms import base
-from imitation.data import rollout, types, wrappers
-from imitation.rewards import reward_wrapper
-from imitation.util import logger as imit_logger
-from imitation.util import util
+from imitation_local.algorithms import base
+from imitation_local.data import rollout, types, wrappers
+from imitation_local.rewards import reward_wrapper
+from imitation_local.util import logger as imit_logger
+from imitation_local.util import util
 
 
 class DensityType(enum.Enum):
@@ -104,7 +104,7 @@ class DensityAlgorithm(base.DemonstrationAlgorithm):
                 training. If True, overrides this safety check. WARNING: variable
                 horizon episodes leak information about the reward via termination
                 condition, and can seriously confound evaluation. Read
-                https://imitation.readthedocs.io/en/latest/guide/variable_horizon.html
+                https://imitation_local.readthedocs.io/en/latest/guide/variable_horizon.html
                 before overriding this.
         """
         self.is_stationary = is_stationary
@@ -360,12 +360,12 @@ class DensityAlgorithm(base.DemonstrationAlgorithm):
         return rew_array
 
     def train_policy(self, n_timesteps: int = int(1e6), **kwargs: Any) -> None:
-        """Train the imitation policy for a given number of timesteps.
+        """Train the imitation_local policy for a given number of timesteps.
 
         Args:
             n_timesteps: number of timesteps to train the policy for.
             kwargs (dict): extra arguments that will be passed to the `learn()`
-                method of the imitation RL model. Refer to Stable Baselines docs for
+                method of the imitation_local RL model. Refer to Stable Baselines docs for
                 details.
         """
         assert self.rl_algo is not None
@@ -382,16 +382,16 @@ class DensityAlgorithm(base.DemonstrationAlgorithm):
         self._check_fixed_horizon(ep_lens)
 
     def test_policy(self, *, n_trajectories: int = 10, true_reward: bool = True):
-        """Test current imitation policy on environment & give some rollout stats.
+        """Test current imitation_local policy on environment & give some rollout stats.
 
         Args:
             n_trajectories: number of rolled-out trajectories.
             true_reward: should this use ground truth reward from underlying
-                environment (True), or imitation reward (False)?
+                environment (True), or imitation_local reward (False)?
 
         Returns:
             dict: rollout statistics collected by
-                `imitation.utils.rollout.rollout_stats()`.
+                `imitation_local.utils.rollout.rollout_stats()`.
         """
         trajs = rollout.generate_trajectories(
             self.rl_algo,
