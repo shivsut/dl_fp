@@ -134,7 +134,7 @@ class IceHockeyLearner(gymnasium.Env):
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
-        self.max_timestep = 1200
+        self.max_timestep = 2000
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
