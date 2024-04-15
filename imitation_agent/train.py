@@ -114,10 +114,10 @@ def main(args):
                                         rollout_round_min_episodes=1,
                                          bc_train_kwargs={'progress_bar':False}
                                         )
-                    bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
-        bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
-        # m = torch.jit.script(bc_trainer._policy)
-        # torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
+                    bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
+        bc_trainer.policy.save(f"{data_dir}/{args.variant}.pt")
+        m = torch.jit.script(bc_trainer.policy)
+        torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
@@ -134,7 +134,7 @@ def main(args):
         )
     bc_trainer_eval = load_policy(bc_trainer_eval, path=data_dir, ckpt=args.variant)
     bc_trainer_eval.policy.eval()
-    reward, _ = evaluate_policy(bc_trainer_eval._policy, envs_eval, args.time_steps_infer, deterministic=False)
+    reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer, deterministic=False)
     print("Reward:", reward)
 
 

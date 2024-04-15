@@ -10,7 +10,7 @@ from stable_baselines3_local.common.type_aliases import TensorDict
 from stable_baselines3_local.common.utils import get_device
 
 
-class BaseFeaturesExtractor(nn.Module):
+class BaseFeaturesExtractor():
     """
     Base class that represents a features extractor.
 
@@ -42,6 +42,9 @@ class FlattenExtractor(BaseFeaturesExtractor):
         self.flatten = nn.Flatten()
 
     def forward(self, observations: th.Tensor) -> th.Tensor:
+        return self.flatten(observations)
+
+    def __call__(self, observations: th.Tensor) -> th.Tensor:
         return self.flatten(observations)
 
 

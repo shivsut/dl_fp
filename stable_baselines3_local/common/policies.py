@@ -452,7 +452,7 @@ class ActorCriticPolicy(BasePolicy):
         lr_schedule: Schedule,
         net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
         activation_fn: Type[nn.Module] = nn.Tanh,
-        ortho_init: bool = True,
+        ortho_init: bool = False,
         use_sde: bool = False,
         log_std_init: float = 0.0,
         full_std: bool = True,
