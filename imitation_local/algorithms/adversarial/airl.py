@@ -2,8 +2,8 @@
 from typing import Optional
 
 import torch as th
-from sb3_local.common import base_class, policies, vec_env
-from sb3_local.sac import policies as sac_policies
+from stable_baselines3_local.common import base_class, policies, vec_env
+from stable_baselines3_local.sac import policies as sac_policies
 
 from imitation_local.algorithms import base
 from imitation_local.algorithms.adversarial import common

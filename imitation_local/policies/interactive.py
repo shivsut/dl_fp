@@ -8,7 +8,7 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 import numpy as np
 from shimmy import atari_env
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import vec_env
 
 import imitation_local.policies.base as base_policies
 from imitation_local.util import util

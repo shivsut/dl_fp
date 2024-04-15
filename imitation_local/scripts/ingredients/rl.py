@@ -8,8 +8,8 @@ import warnings
 from typing import Any, Dict, Mapping, Optional, Type
 
 import sacred
-import sb3_local as sb3
-from sb3_local.common import (
+import stable_baselines3_local as sb3
+from stable_baselines3_local.common import (
     base_class,
     buffers,
     off_policy_algorithm,

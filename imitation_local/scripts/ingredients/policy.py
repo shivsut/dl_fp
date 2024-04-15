@@ -4,7 +4,7 @@ import logging
 from typing import Any, Mapping, Type
 
 import sacred
-from sb3_local.common import policies, utils, vec_env
+from stable_baselines3_local.common import policies, utils, vec_env
 
 import imitation_local.util.networks
 from imitation_local.policies import base

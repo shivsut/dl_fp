@@ -19,10 +19,10 @@ from typing import (
 
 import numpy as np
 from gymnasium import spaces
-from sb3_local.common.base_class import BaseAlgorithm
-from sb3_local.common.policies import BasePolicy
-from sb3_local.common.utils import check_for_correct_spaces
-from sb3_local.common.vec_env import VecEnv
+from stable_baselines3_local.common.base_class import BaseAlgorithm
+from stable_baselines3_local.common.policies import BasePolicy
+from stable_baselines3_local.common.utils import check_for_correct_spaces
+from stable_baselines3_local.common.vec_env import VecEnv
 
 from imitation_local.data import types
 

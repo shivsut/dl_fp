@@ -5,7 +5,7 @@ from typing import List, Optional, Sequence, Tuple
 import gymnasium as gym
 import numpy as np
 import numpy.typing as npt
-from sb3_local.common.vec_env import VecEnv, VecEnvWrapper
+from stable_baselines3_local.common.vec_env import VecEnv, VecEnvWrapper
 
 from imitation_local.data import rollout, types
 

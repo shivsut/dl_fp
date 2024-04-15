@@ -11,7 +11,7 @@ from typing import Any, Mapping, Optional, Type, Union
 import numpy as np
 import torch as th
 from sacred.observers import FileStorageObserver
-from sb3_local.common import type_aliases
+from stable_baselines3_local.common import type_aliases
 
 import imitation_local.data.serialize as data_serialize
 import imitation_local.policies.serialize as policies_serialize

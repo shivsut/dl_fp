@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 
 import sacred
 import torch as th
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import vec_env
 
 from imitation_local.algorithms import bc
 from imitation_local.data import types

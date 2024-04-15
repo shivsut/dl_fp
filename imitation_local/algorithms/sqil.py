@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Optional, Type, Union
 import numpy as np
 import torch as th
 from gymnasium import spaces
-from sb3_local import dqn
-from sb3_local.common import (
+from stable_baselines3_local import dqn
+from stable_baselines3_local.common import (
     buffers,
     off_policy_algorithm,
     policies,

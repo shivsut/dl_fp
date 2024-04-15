@@ -4,9 +4,9 @@ import collections
 from typing import Deque
 
 import numpy as np
-from sb3_local.common import callbacks
-from sb3_local.common import logger as sb_logger
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import callbacks
+from stable_baselines3_local.common import logger as sb_logger
+from stable_baselines3_local.common import vec_env
 
 from imitation_local.data import types
 from imitation_local.rewards import reward_function

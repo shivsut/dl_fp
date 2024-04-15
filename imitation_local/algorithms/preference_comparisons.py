@@ -27,7 +27,7 @@ from typing import (
 import numpy as np
 import torch as th
 from scipy import special
-from sb3_local.common import base_class, type_aliases, utils, vec_env
+from stable_baselines3_local.common import base_class, type_aliases, utils, vec_env
 from torch import nn
 from torch.utils import data as data_th
 from tqdm.auto import tqdm

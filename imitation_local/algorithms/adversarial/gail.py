@@ -3,7 +3,7 @@
 from typing import Optional
 
 import torch as th
-from sb3_local.common import base_class, vec_env
+from stable_baselines3_local.common import base_class, vec_env
 from torch.nn import functional as F
 
 from imitation_local.algorithms import base

@@ -15,8 +15,8 @@ from typing import Any, Mapping, Optional
 
 import numpy as np
 from sacred.observers import FileStorageObserver
-from sb3_local.common import callbacks
-from sb3_local.common.vec_env import VecNormalize
+from stable_baselines3_local.common import callbacks
+from stable_baselines3_local.common.vec_env import VecNormalize
 
 import imitation_local.data.serialize as data_serialize
 import imitation_local.policies.serialize as policies_serialize

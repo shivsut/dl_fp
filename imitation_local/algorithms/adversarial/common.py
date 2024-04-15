@@ -8,14 +8,14 @@ import numpy as np
 import torch as th
 import torch.utils.tensorboard as thboard
 import tqdm
-from sb3_local.common import (
+from stable_baselines3_local.common import (
     base_class,
     distributions,
     on_policy_algorithm,
     policies,
     vec_env,
 )
-from sb3_local.sac import policies as sac_policies
+from stable_baselines3_local.sac import policies as sac_policies
 from torch.nn import functional as F
 
 from imitation_local.algorithms import base

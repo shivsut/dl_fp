@@ -14,7 +14,7 @@ from typing import (
 )
 
 import torch.utils.data as th_data
-from sb3_local.common import policies
+from stable_baselines3_local.common import policies
 
 from imitation_local.data import rollout, types
 from imitation_local.util import logger as imit_logger

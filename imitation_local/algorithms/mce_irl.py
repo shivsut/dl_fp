@@ -25,7 +25,7 @@ import numpy as np
 import scipy.special
 import torch as th
 from seals import base_envs
-from sb3_local.common import policies
+from stable_baselines3_local.common import policies
 
 from imitation_local.algorithms import base
 from imitation_local.data import rollout, types

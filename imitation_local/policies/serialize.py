@@ -8,7 +8,7 @@ import pathlib
 from typing import Callable, Type, TypeVar
 
 import huggingface_sb3 as hfsb3
-from sb3_local.common import base_class, callbacks, policies, vec_env
+from stable_baselines3_local.common import base_class, callbacks, policies, vec_env
 
 from imitation_local.policies import base
 from imitation_local.util import registry, util
