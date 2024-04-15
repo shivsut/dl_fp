@@ -63,10 +63,12 @@ class IceHockeyLearner(gymnasium.Env):
         # pi = 3.2
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
-        #
-        # self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
-        self.discrete = discretization(aceel_div=args.md)
-        self.action_space = spaces.MultiDiscrete(nvec=self.discrete.K_n, start=self.discrete.start)
+        if args.md:
+            self.discrete = discretization(aceel_div=args.md)
+            self.action_space = spaces.MultiDiscrete(nvec=self.discrete.K_n, start=self.discrete.start)
+        else:
+            self.discrete = None
+            self.action_space = spaces.Box(low=np.array([0, -1, 0]), high=np.array([1, 1, 1]), dtype=np.float32)
         # kart_center[0] - 0 to 100 p1_x
         # kart_center[1] - 0 to 100 p2_y
         # kart_angle - -pi to pi
@@ -160,7 +162,7 @@ class IceHockeyLearner(gymnasium.Env):
 
     def step(self, action):
 
-        action = self.discrete.de_discrete(action)
+        action = self.discrete.de_discrete(action) if self.discrete else action
         self.current_timestep += 1
         team1_state = [to_native(p) for p in self.state.players[0:1]]
         team2_state = [to_native(p) for p in self.state.players[1:2]]
