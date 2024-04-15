@@ -4,6 +4,7 @@ from gymnasium import spaces
 from typing import Any, Dict, List, Optional, Tuple, Union
 from os import path 
 import torch
+from imitation_agent.utils import discretization
 from stable_baselines3_local.common.policies import BasePolicy
 
 
@@ -22,15 +23,17 @@ class IceHockeyEnv(BasePolicy):
                  observation_space: spaces.Space,
                 action_space: spaces.Space, 
                 expert_name: str,
-                num_players: int = 2, team: int = 0):
+                num_players: int = 2, team: int = 0,
+                 args=None):
         super().__init__(
             observation_space,
             action_space)
         
         self.num_players = num_players
         self.team = team
-        self.model = torch.jit.load(path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
-        # self.model = torch.jit.load(path.join(path.dirname(path.abspath(__file__)), 'yann_agent.pt'))
+        self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
+        self.discrete = discretization(aceel_div=args.md) if args.md else lambda x :x
+
 
     def _predict(self, observation, deterministic: bool = False):
         actions = self.model(x=observation)
@@ -50,7 +53,8 @@ class IceHockeyEnv(BasePolicy):
         actions = []
         for i in range(len(observation)):
             obs = observation[i]
-            actions.append(self._predict(obs))
+
+            actions.append(self.discrete(self._predict(obs)))
         return actions, state
         
         

@@ -47,6 +47,7 @@ class FeedForward32Policy(policies.ActorCriticPolicy):
         super().__init__(*args, **kwargs)
 def main(args):
     rng = np.random.default_rng(0)
+    data_dir = os.path.join(os.getcwd(), args.variant)
     envs = SubprocVecEnv(
         [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
     policy_ac = FeedForward32Policy(
@@ -69,18 +70,19 @@ def main(args):
             shutil.copy(src, dst)
             print(f"Resuming the training using ckpt: {src}")
             
-        data_dir = os.path.join(os.getcwd(), args.variant)
+
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
         # create environment
-        # experts = [args.expert]        # experts
-        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in [args.expert]}
+        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args) for key in [args.expert]}
+
+
         # BC trainer
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
             action_space=envs.action_space,
-            custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/'), CSVOutputFormat(os.path.join(data_dir,'train_bc_csv.csv'))])),
+            custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/')])),
             rng=rng,
             policy=policy_ac,
             batch_size=args.batch_size,
@@ -105,11 +107,12 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
+                        # custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
-                                        rollout_round_min_episodes=1
+                                        rollout_round_min_episodes=1,
+                                         bc_train_kwargs={'progress_bar':False}
                                         )
                     bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
         bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
@@ -151,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')
     parser.add_argument('--expert', default='yann_agent')
-    parser.add_argument('-d', '--discretization', action='store_true')
+    parser.add_argument('--md', type=int, required=False)
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
     parser.add_argument('--resume_training', type=str)
