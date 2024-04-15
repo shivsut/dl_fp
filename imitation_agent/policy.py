@@ -1,11 +1,11 @@
-from stable_baselines3.common.policies import BasePolicy
+
 import numpy as np
 from gymnasium import spaces
 from typing import Any, Dict, List, Optional, Tuple, Union
 from os import path 
 import torch
-
 from imitation_agent.utils import discretization
+from stable_baselines3_local.common.policies import BasePolicy
 
 
 class IceHockeyEnv(BasePolicy):
@@ -34,8 +34,9 @@ class IceHockeyEnv(BasePolicy):
         self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
         self.discrete = discretization(aceel_div=args.md) if args.md else lambda x :x
 
+
     def _predict(self, observation, deterministic: bool = False):
-        actions = self.model(observation)
+        actions = self.model(x=observation)
         return torch.tensor(actions)
 
     def predict(

@@ -4,22 +4,26 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
-from imitation.policies.base import FeedForward32Policy
-from imitation.util.logger import HierarchicalLogger
-from stable_baselines3.common.evaluation import evaluate_policy
-import imitation.data.rollout as rollout
+from imitation_local.algorithms import bc
+from imitation_local.algorithms.dagger import SimpleDAggerTrainer
+from imitation_local.util.logger import HierarchicalLogger
+from stable_baselines3_local.common import policies, torch_layers
+from stable_baselines3_local.common.evaluation import evaluate_policy
+from stable_baselines3_local.common.logger import TensorBoardOutputFormat, CSVOutputFormat, Logger
+from stable_baselines3_local.common.monitor import Monitor
+from stable_baselines3_local.common.policies import BasePolicy
 
-from imitation.algorithms import bc
-from imitation.algorithms.dagger import SimpleDAggerTrainer
-from imitation.policies.serialize import load_policy
-from imitation.util.util import make_vec_env
-from stable_baselines3.common.logger import Logger, CSVOutputFormat, TensorBoardOutputFormat
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3_local.common.vec_env import SubprocVecEnv
+
+
+
 
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
 from imitation_agent.utils import load_policy
+# from sb3_local.common.policies import ActorCriticPolicy
+# from imitation_agent.policies import ActorCriticPolicy
+
 
 # TODO: Add jurgen agent: 'jurgen_agent'
 # EXPERT = ['jurgen_agent']
@@ -28,10 +32,34 @@ from imitation_agent.utils import load_policy
 # EXPERT = ['yann_agent']
 # Expert agent for Defense
 # EXPERT = ['geoffrey_agent1', 'yoshua_agent1']
+class FeedForward32Policy(policies.ActorCriticPolicy):
+    """A feed forward policy network with two hidden layers of 32 units.
 
+    This matches the IRL policies in the original AIRL paper.
+
+    Note: This differs from stable_baselines3 ActorCriticPolicy in two ways: by
+    having 32 rather than 64 units, and by having policy and value networks
+    share weights except at the final layer, where there are different linear heads.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Builds FeedForward32Policy; arguments passed to `ActorCriticPolicy`."""
+        super().__init__(*args, **kwargs)
 def main(args):
     rng = np.random.default_rng(0)
     data_dir = os.path.join(os.getcwd(), args.variant)
+    envs = SubprocVecEnv(
+        [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
+    policy_ac = FeedForward32Policy(
+        observation_space=envs.observation_space,
+        action_space=envs.action_space,
+        lr_schedule=lambda _: torch.finfo(torch.float32).max,
+        net_arch=[512, 512]
+        # Set lr_schedule to max value to force error if policy.optimizer
+        # is used by mistake (should use self.optimizer instead).
+        # features_extractor_class=extractor
+
+    )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
@@ -47,10 +75,8 @@ def main(args):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
         # create environment
-        # experts = [args.expert]
-        envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(args.nenv)])
-        # experts 
         experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args) for key in [args.expert]}
+
 
         # BC trainer
         bc_trainer = bc.BC(
@@ -58,6 +84,7 @@ def main(args):
             action_space=envs.action_space,
             custom_logger=HierarchicalLogger(Logger(f'{data_dir}/bc_log/', output_formats=[TensorBoardOutputFormat(f'{data_dir}/bc_log/')])),
             rng=rng,
+            policy=policy_ac,
             batch_size=args.batch_size,
             device=torch.device(args.device),
         )
@@ -73,7 +100,7 @@ def main(args):
                 expert = experts[expert_name]
                 with tempfile.TemporaryDirectory(prefix="dagger_example_") as tmpdir:
                     print(tmpdir)
-                    bc_trainer = load_policy(bc_trainer, path=policy_dir.name)
+                    # bc_trainer = load_policy(bc_trainer, path=policy_dir.name)
                     dagger_trainer = SimpleDAggerTrainer(
                         venv=envs,
                         scratch_dir=tmpdir,
@@ -87,10 +114,10 @@ def main(args):
                                         rollout_round_min_episodes=1,
                                          bc_train_kwargs={'progress_bar':False}
                                         )
-                    bc_trainer.policy.save(f"{policy_dir.name}/hockey.pt")
-        bc_trainer.policy.save(f"{data_dir}/{args.variant}.pt")
-        m = torch.jit.script(bc_trainer.policy.mlp_extractor)
-        torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
+                    bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
+        bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
+        # m = torch.jit.script(bc_trainer._policy)
+        # torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
@@ -101,12 +128,13 @@ def main(args):
             observation_space=envs_eval.observation_space,
             action_space=envs_eval.action_space,
             rng=rng,
+            policy=policy_ac,
             batch_size=args.batch_size,
             device=torch.device(args.device),
         )
     bc_trainer_eval = load_policy(bc_trainer_eval, path=data_dir, ckpt=args.variant)
     bc_trainer_eval.policy.eval()
-    reward, _ = evaluate_policy(bc_trainer_eval.policy, envs_eval, args.time_steps_infer, deterministic=False)
+    reward, _ = evaluate_policy(bc_trainer_eval._policy, envs_eval, args.time_steps_infer, deterministic=False)
     print("Reward:", reward)
 
 
