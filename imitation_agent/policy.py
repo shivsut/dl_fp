@@ -1,9 +1,11 @@
-from sb3_local.common.policies import BasePolicy
+
 import numpy as np
 from gymnasium import spaces
 from typing import Any, Dict, List, Optional, Tuple, Union
 from os import path 
-import torch 
+import torch
+from stable_baselines3.common.policies import BasePolicy
+
 
 class IceHockeyEnv(BasePolicy):
     """The base policy object.
@@ -27,10 +29,11 @@ class IceHockeyEnv(BasePolicy):
         
         self.num_players = num_players
         self.team = team
-        self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
+        self.model = torch.jit.load(path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
+        # self.model = torch.jit.load(path.join(path.dirname(path.abspath(__file__)), 'yann_agent.pt'))
 
     def _predict(self, observation, deterministic: bool = False):
-        actions = self.model(observation)
+        actions = self.model(x=observation)
         return torch.tensor(actions)
 
     def predict(
