@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import numpy as np
+import torch
 import torch as th
 from gymnasium import spaces
 from torch import nn
@@ -333,7 +334,7 @@ class MultiCategoricalDistribution(Distribution):
         :return:
         """
 
-        action_logits = nn.Linear(latent_dim, sum(self.action_dims))
+        action_logits = nn.Linear(latent_dim, int(sum(self.action_dims)))
         return action_logits
 
     def proba_distribution(
