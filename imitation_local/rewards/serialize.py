@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Iterable, Optional, Sequence, Type, Unio
 
 import numpy as np
 import torch as th
-from sb3_local.common.vec_env import VecEnv
+from stable_baselines3_local.common.vec_env import VecEnv
 
 from imitation_local.rewards import reward_function, reward_nets
 from imitation_local.util import registry, util

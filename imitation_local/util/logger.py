@@ -8,7 +8,7 @@ import sys
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple
 
-import sb3_local.common.logger as sb_logger
+import stable_baselines3_local.common.logger as sb_logger
 
 from imitation_local.data import types
 from imitation_local.util import util

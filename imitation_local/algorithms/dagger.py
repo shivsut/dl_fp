@@ -15,8 +15,8 @@ from typing import Any, Callable, List, Mapping, Optional, Sequence, Tuple, Unio
 
 import numpy as np
 import torch as th
-from sb3_local.common import policies, utils, vec_env
-from sb3_local.common.vec_env.base_vec_env import VecEnvStepReturn
+from stable_baselines3_local.common import policies, utils, vec_env
+from stable_baselines3_local.common.vec_env.base_vec_env import VecEnvStepReturn
 from torch.utils import data as th_data
 
 from imitation_local.algorithms import base, bc

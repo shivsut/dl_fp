@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Optional, cast
 import numpy as np
 from gymnasium.spaces import utils as space_utils
 from sklearn import neighbors, preprocessing
-from sb3_local.common import base_class, vec_env
+from stable_baselines3_local.common import base_class, vec_env
 
 from imitation_local.algorithms import base
 from imitation_local.data import rollout, types, wrappers

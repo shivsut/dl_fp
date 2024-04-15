@@ -3,7 +3,7 @@
 from typing import Any, Mapping, Optional, Tuple
 
 import numpy as np
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import vec_env
 
 from imitation_local.data import types
 

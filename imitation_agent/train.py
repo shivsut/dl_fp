@@ -4,18 +4,18 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
-from imitation.algorithms import bc
-from imitation.algorithms.dagger import SimpleDAggerTrainer
-from imitation.util.logger import HierarchicalLogger
-from stable_baselines3.common import policies
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.logger import TensorBoardOutputFormat, CSVOutputFormat, Logger
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.policies import BasePolicy
+from imitation_local.algorithms import bc
+from imitation_local.algorithms.dagger import SimpleDAggerTrainer
+from imitation_local.util.logger import HierarchicalLogger
+from stable_baselines3_local.common import policies, torch_layers
+from stable_baselines3_local.common.evaluation import evaluate_policy
+from stable_baselines3_local.common.logger import TensorBoardOutputFormat, CSVOutputFormat, Logger
+from stable_baselines3_local.common.monitor import Monitor
+from stable_baselines3_local.common.policies import BasePolicy
 
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3_local.common.vec_env import SubprocVecEnv
 
-from imitation_agent import torch_layers
+
 
 
 from imitation_agent.learner import IceHockeyLearner

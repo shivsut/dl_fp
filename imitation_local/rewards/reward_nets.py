@@ -7,7 +7,7 @@ import gymnasium as gym
 import numpy as np
 import torch as th
 from gymnasium import spaces
-from sb3_local.common import preprocessing
+from stable_baselines3_local.common import preprocessing
 from torch import nn
 
 from imitation_local.util import networks, util

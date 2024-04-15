@@ -4,8 +4,8 @@ from typing import Mapping, Type
 
 import numpy as np
 from gymnasium import spaces
-from sb3_local.common.buffers import ReplayBuffer
-from sb3_local.common.type_aliases import ReplayBufferSamples
+from stable_baselines3_local.common.buffers import ReplayBuffer
+from stable_baselines3_local.common.type_aliases import ReplayBufferSamples
 
 from imitation_local.rewards.reward_function import RewardFn
 from imitation_local.util import util

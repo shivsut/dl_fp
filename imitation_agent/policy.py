@@ -4,7 +4,7 @@ from gymnasium import spaces
 from typing import Any, Dict, List, Optional, Tuple, Union
 from os import path 
 import torch
-from stable_baselines3.common.policies import BasePolicy
+from stable_baselines3_local.common.policies import BasePolicy
 
 
 class IceHockeyEnv(BasePolicy):

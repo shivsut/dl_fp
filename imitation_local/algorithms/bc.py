@@ -23,7 +23,7 @@ import gymnasium as gym
 import numpy as np
 import torch as th
 import tqdm
-from sb3_local.common import policies, torch_layers, utils, vec_env
+from stable_baselines3_local.common import policies, torch_layers, utils, vec_env
 
 from imitation_local.algorithms import base as algo_base
 from imitation_local.data import rollout, types

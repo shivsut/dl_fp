@@ -8,7 +8,7 @@ from typing import Mapping, Union
 
 import numpy as np
 import sacred
-from sb3_local.common import base_class, policies, vec_env
+from stable_baselines3_local.common import base_class, policies, vec_env
 
 from imitation_local.data import rollout
 

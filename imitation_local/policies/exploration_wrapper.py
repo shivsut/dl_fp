@@ -3,7 +3,7 @@
 from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import vec_env
 
 from imitation_local.data import rollout
 from imitation_local.util import util

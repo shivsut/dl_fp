@@ -5,7 +5,7 @@ import typing
 from typing import Any, Mapping, Optional, Type
 
 import sacred
-from sb3_local.common import vec_env
+from stable_baselines3_local.common import vec_env
 
 from imitation_local.rewards import reward_nets
 from imitation_local.util import networks

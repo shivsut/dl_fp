@@ -6,8 +6,8 @@ from typing import Dict, Type, Union
 import gymnasium as gym
 import numpy as np
 import torch as th
-from sb3_local.common import policies, torch_layers
-from sb3_local.sac import policies as sac_policies
+from stable_baselines3_local.common import policies, torch_layers
+from stable_baselines3_local.sac import policies as sac_policies
 from torch import nn
 
 from imitation_local.data import types

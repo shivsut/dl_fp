@@ -8,7 +8,7 @@ from typing import Any, Mapping, Optional
 import gymnasium as gym
 import numpy as np
 from sacred.observers import FileStorageObserver
-from sb3_local.common.vec_env import VecEnvWrapper
+from stable_baselines3_local.common.vec_env import VecEnvWrapper
 
 from imitation_local.data import rollout, serialize
 from imitation_local.policies.exploration_wrapper import ExplorationWrapper
