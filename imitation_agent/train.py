@@ -46,8 +46,19 @@ class FeedForward32Policy(policies.ActorCriticPolicy):
         """Builds FeedForward32Policy; arguments passed to `ActorCriticPolicy`."""
         super().__init__(*args, **kwargs)
 def main(args):
-    rng = np.random.default_rng(0)    
+    rng = np.random.default_rng(0)
+    envs = SubprocVecEnv(
+        [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
+    policy_ac = FeedForward32Policy(
+        observation_space=envs.observation_space,
+        action_space=envs.action_space,
+        lr_schedule=lambda _: torch.finfo(torch.float32).max,
+        net_arch=[512, 512]
+        # Set lr_schedule to max value to force error if policy.optimizer
+        # is used by mistake (should use self.optimizer instead).
+        # features_extractor_class=extractor
 
+    )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
@@ -63,24 +74,8 @@ def main(args):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
         # create environment
-        # experts = [args.expert]
-        envs = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(args.nenv)])
-        # experts 
+        # experts = [args.expert]        # experts
         experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key) for key in [args.expert]}
-
-        extractor = torch_layers.FlattenExtractor
-        policy_ac = FeedForward32Policy(
-            observation_space=envs.observation_space,
-            action_space=envs.action_space,
-            lr_schedule=lambda _: torch.finfo(torch.float32).max,
-            net_arch=[512, 512]
-            # Set lr_schedule to max value to force error if policy.optimizer
-            # is used by mistake (should use self.optimizer instead).
-            # features_extractor_class=extractor
-
-        )
-        if isinstance(policy_ac, BasePolicy):
-            print('Yes')
         # BC trainer
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
@@ -130,6 +125,7 @@ def main(args):
             observation_space=envs_eval.observation_space,
             action_space=envs_eval.action_space,
             rng=rng,
+            policy=policy_ac,
             batch_size=args.batch_size,
             device=torch.device(args.device),
         )
