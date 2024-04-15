@@ -10,7 +10,7 @@ from stable_baselines3_local.common.type_aliases import TensorDict
 from stable_baselines3_local.common.utils import get_device
 
 
-class BaseFeaturesExtractor():
+class BaseFeaturesExtractor:
     """
     Base class that represents a features extractor.
 
@@ -19,7 +19,6 @@ class BaseFeaturesExtractor():
     """
 
     def __init__(self, observation_space: gym.Space, features_dim: int = 0) -> None:
-        super().__init__()
         assert features_dim > 0
         self._observation_space = observation_space
         self._features_dim = features_dim
