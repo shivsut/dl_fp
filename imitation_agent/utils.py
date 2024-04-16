@@ -31,8 +31,11 @@ class discretization:
         x = x.to(int)
         return x
 
-    def de_discrete(self, action: np.ndarray) -> np.ndarray:
-        action = action.astype(np.float32)
+    def de_discrete(self, action):
+        if isinstance(action, np.ndarray):
+            action = action.astype(np.float32)
+        else:
+            action = action.to(torch.float32)
         action[0] /= float(self.accel_div)
         action[1] -= 1.0
         return action
