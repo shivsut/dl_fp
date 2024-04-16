@@ -122,8 +122,10 @@ class IceHockeyModel(nn.Module):
         return actions, state
 
     def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
+        observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
+        action_output = action_output.to("cpu")
         actions = self.distribution.create_prob_distribution(action_output)
         return actions.mode() if deterministic else actions.sample()
 
