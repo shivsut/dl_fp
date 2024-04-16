@@ -19,6 +19,8 @@ from typing import (
 
 import numpy as np
 from gymnasium import spaces
+
+from imitation_agent.model import IceHockeyModel
 from stable_baselines3_local.common.base_class import BaseAlgorithm
 from stable_baselines3_local.common.policies import BasePolicy
 from stable_baselines3_local.common.utils import check_for_correct_spaces
@@ -302,7 +304,7 @@ def policy_to_callable(
             acts = [venv.action_space.sample() for _ in range(len(observations))]
             return np.stack(acts, axis=0), None
 
-    elif isinstance(policy, (BaseAlgorithm, BasePolicy)):
+    elif isinstance(policy, (BaseAlgorithm, BasePolicy, IceHockeyModel)):
         # There's an important subtlety here: BaseAlgorithm and BasePolicy
         # are themselves Callable (which we check next). But in their case,
         # we want to use the .predict() method, rather than __call__()
@@ -313,7 +315,7 @@ def policy_to_callable(
             states: Optional[Tuple[np.ndarray, ...]],
             episode_starts: Optional[np.ndarray],
         ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
-            assert isinstance(policy, (BaseAlgorithm, BasePolicy))
+            assert isinstance(policy, (BaseAlgorithm, BasePolicy, IceHockeyModel))
             # pytype doesn't seem to understand that policy is a BaseAlgorithm
             # or BasePolicy here, rather than a Callable
             (acts, states) = policy.predict(  # pytype: disable=attribute-error

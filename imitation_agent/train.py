@@ -4,6 +4,8 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
+
+from imitation_agent.model import IceHockeyModel
 from imitation_local.algorithms import bc
 from imitation_local.algorithms.dagger import SimpleDAggerTrainer
 from imitation_local.util.logger import HierarchicalLogger
@@ -59,6 +61,15 @@ def main(args):
         # is used by mistake (should use self.optimizer instead).
         # features_extractor_class=extractor
 
+    )
+    action_logits_dim= envs.action_space.nvec.sum().item()
+    policy_ac = IceHockeyModel(
+        observation_dim=int(envs.observation_space.shape[0]),
+        action_logits_dim=action_logits_dim,
+        action_space_dim=int(envs.action_space.shape[0]),
+        action_logits_dims_list=envs.action_space.nvec.tolist(),
+        lr_scheduler=lambda _: torch.finfo(torch.float32).max,
+        net_arch=[512,512]
     )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
@@ -116,8 +127,8 @@ def main(args):
                                         )
                     bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
         bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
-        # m = torch.jit.script(bc_trainer._policy)
-        # torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
+        m = torch.jit.script(bc_trainer._policy)
+        torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")

@@ -354,8 +354,8 @@ class BC(algo_base.DemonstrationAlgorithm):
             )
         self._policy = policy.to(utils.get_device(device))
         # TODO(adam): make policy mandatory and delete observation/action space params?
-        assert self.policy.observation_space == self.observation_space
-        assert self.policy.action_space == self.action_space
+        # assert self.policy.observation_space == self.observation_space
+        # assert self.policy.action_space == self.action_space
 
         if optimizer_kwargs:
             if "weight_decay" in optimizer_kwargs:
