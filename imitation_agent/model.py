@@ -47,7 +47,7 @@ class IceHockeyModel(nn.Module):
                  action_logits_dim: int,
                  action_logits_dims_list: [int],
                  action_space_dim: int,
-                 lr_scheduler: Callable[[float], float],
+                 lr_scheduler: float,
                  net_arch: [int],
                  activation_function: nn.Module = nn.Tanh,
                  ortho_init: bool = True,  # TODO optimize
@@ -93,7 +93,7 @@ class IceHockeyModel(nn.Module):
 
         # TODO ortho_init
 
-        self.optimizer = self.optimizer_class(self.parameters(), lr=lr_scheduler(1))
+        self.optimizer = self.optimizer_class(self.parameters(), lr=lr_scheduler)
 
     def forward(self, observation: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         policy_output = self.policy_nn(observation)

@@ -688,6 +688,7 @@ class SimpleDAggerTrainer(DAggerTrainer):
             self._logger.record("dagger/round_num", round_num)
             self._logger.record("dagger/round_episode_count", round_episode_count)
             self._logger.record("dagger/round_timestep_count", round_timestep_count)
+            self._logger.dump()
 
             # `logger.dump` is called inside BC.train within the following fn call:
             self.extend_and_update(bc_train_kwargs)

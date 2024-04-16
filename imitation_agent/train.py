@@ -68,7 +68,7 @@ def main(args):
         action_logits_dim=action_logits_dim,
         action_space_dim=int(envs.action_space.shape[0]),
         action_logits_dims_list=envs.action_space.nvec.tolist(),
-        lr_scheduler=lambda _: torch.finfo(torch.float32).max,
+        lr_scheduler=torch.finfo(torch.float32).max,
         net_arch=[512,512]
     )
     if not args.only_inference:
@@ -118,14 +118,14 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        # custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
+                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
                                         rollout_round_min_episodes=1,
                                          bc_train_kwargs={'progress_bar':False}
                                         )
-                    bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
+                    # bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
         bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
         # m = torch.jit.script(bc_trainer._policy)
         # torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
