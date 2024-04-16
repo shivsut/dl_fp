@@ -112,20 +112,20 @@ class IceHockeyModel(nn.Module):
         log_probability = self.distribution.create_prob_distribution(actions_output).log_probability(actions)
         return self.value_net2(value_output), log_probability, self.distribution.entropy()
 
-    def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=True):
+    def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=False):
         observation = torch.tensor(observation)
         observation = observation.to(torch.float32)
         self.train(False)
         with torch.no_grad():
-            actions = self.predict_action(observation)
+            actions = self.predict_action(observation, deterministic)
         actions.cpu().numpy().reshape((-1, self.action_space_dim))
         return actions, state
 
-    def predict_action(self, observation: torch.Tensor) -> torch.Tensor:
+    def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
-        actions = self.distribution.create_prob_distribution(action_output).mode()
-        return actions
+        actions = self.distribution.create_prob_distribution(action_output)
+        return actions.mode() if deterministic else actions.sample()
 
     def _get_constructor_parameters(self):
         data = {}

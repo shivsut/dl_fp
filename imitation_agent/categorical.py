@@ -7,7 +7,7 @@ from torch.distributions.utils import lazy_property, logits_to_probs, probs_to_l
 __all__ = ["Categorical"]
 
 
-class Categorical:
+class Categorical(Distribution):
     r"""
     Creates a categorical distribution parameterized by either :attr:`probs` or
     :attr:`logits` (but not both).
@@ -65,10 +65,9 @@ class Categorical:
         self._param = self.probs if probs is not None else self.logits
         self._num_events = self._param.size()[-1]
         batch_shape = (
-            # self._param.size()[:-1] if self._param.ndimension() > 1 else torch.Size()
-            self._param.size()[:-1]
+            self._param.size()[:-1] if self._param.ndimension() > 1 else torch.Size()
         )
-        # super().__init__(batch_shape, validate_args=validate_args)
+        super().__init__(batch_shape, validate_args=validate_args)
 
     def expand(self, batch_shape, _instance=None):
         new = self._get_checked_instance(Categorical, _instance)
@@ -84,6 +83,9 @@ class Categorical:
         super(Categorical, new).__init__(batch_shape, validate_args=False)
         new._validate_args = self._validate_args
         return new
+
+    def _new(self, *args, **kwargs):
+        return self._param.new(*args, **kwargs)
 
     @constraints.dependent_property(is_discrete=True, event_dim=0)
     def support(self):
@@ -131,8 +133,8 @@ class Categorical:
         return samples_2d.reshape(self._extended_shape(sample_shape))
 
     def log_prob(self, value):
-        # if self._validate_args:
-        #     self._validate_sample(value)
+        if self._validate_args:
+            self._validate_sample(value)
         value = value.long().unsqueeze(-1)
         value, log_pmf = torch.broadcast_tensors(value, self.logits)
         value = value[..., :1]
