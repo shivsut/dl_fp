@@ -76,8 +76,35 @@ class IceHockeyModel(nn.Module):
             self.value_nn.append(self.activation_function())
             prev_layer_dim = layer
 
+        self.value_net2 = nn.Linear(prev_layer_dim, 1)
         self.action_nn.append(nn.Linear(prev_layer_dim, self.action_space.shape[0]))
 
         # TODO ortho_init
 
         self.optimizer = self.optimizer_class(self.parameters(), lr=lr_scheduler(1))
+
+    def forward(self, observation: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        policy_output = self.policy_nn(observation)
+        value_output = self.value_nn(observation)
+        # actions_output = self.action_nn(observation)
+        actions_output = self.distribution.create_prob_distribution(policy_output).mode()
+        log_probability = self.distribution.log_probability(actions_output)
+        values = self.value_net2(value_output)
+        return actions_output.reshape((-1, *self.action_space.shape)), values, log_probability
+
+    def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        policy_output = self.policy_nn(observation)
+        value_output = self.value_nn(observation)
+        actions_output = self.action_nn(observation)
+        log_probability = self.distribution.create_prob_distribution(policy_output).log_probability(actions_output)
+        values = self.value_net2(value_output)
+        entropy = self.distribution.entropy()
+        return values, log_probability, entropy
+
+    def predict(self, observation: torch.Tensor) -> torch.Tensor:
+        policy_output = self.policy_nn(observation)
+        action_output = self.action_nn(policy_output)
+        actions = self.distribution.create_prob_distribution(action_output).mode()
+        return  actions
+
+
