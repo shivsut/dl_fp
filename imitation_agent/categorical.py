@@ -1,52 +1,109 @@
 import torch
-from torch import nan
 from torch.distributions import constraints
-from torch.distributions.distribution import Distribution
 from torch.distributions.utils import lazy_property, logits_to_probs, probs_to_logits
 
-__all__ = ["Categorical"]
+import warnings
+from typing import Optional, Tuple
+from torch.types import _size
+
+
+class Distribution:
+
+    _validate_args = __debug__
+
+    def __init__(
+        self,
+        batch_shape: torch.Size = torch.Size(),
+        event_shape: torch.Size = torch.Size(),
+        validate_args: Optional[bool] = None,
+    ):
+        self._batch_shape = batch_shape
+        self._event_shape = event_shape
+        if validate_args is not None:
+            self._validate_args = validate_args
+        if self._validate_args:
+            try:
+                arg_constraints = self.arg_constraints
+            except NotImplementedError:
+                arg_constraints = {}
+                warnings.warn(
+                    f"{self.__class__} does not define `arg_constraints`. "
+                    + "Please set `arg_constraints = {}` or initialize the distribution "
+                    + "with `validate_args=False` to turn off validation."
+                )
+            for param, constraint in arg_constraints.items():
+                if constraints.is_dependent(constraint):
+                    continue  # skip constraints that cannot be checked
+                if param not in self.__dict__ and isinstance(
+                    getattr(type(self), param), lazy_property
+                ):
+                    continue  # skip checking lazily-constructed args
+                value = getattr(self, param)
+                valid = constraint.check(value)
+                if not valid.all():
+                    raise ValueError(
+                        f"Expected parameter {param} "
+                        f"({type(value).__name__} of shape {tuple(value.shape)}) "
+                        f"of distribution {repr(self)} "
+                        f"to satisfy the constraint {repr(constraint)}, "
+                        f"but found invalid values:\n{value}"
+                    )
+
+    def _extended_shape(self, sample_shape: _size = torch.Size()) -> Tuple[int, ...]:
+        if not isinstance(sample_shape, torch.Size):
+            sample_shape = torch.Size(sample_shape)
+        return torch.Size(sample_shape + self._batch_shape + self._event_shape)
+
+    def _validate_sample(self, value: torch.Tensor) -> None:
+        if not isinstance(value, torch.Tensor):
+            raise ValueError("The value argument to log_prob must be a Tensor")
+
+        event_dim_start = len(value.size()) - len(self._event_shape)
+        if value.size()[event_dim_start:] != self._event_shape:
+            raise ValueError(
+                f"The right-most size of value must match event_shape: {value.size()} vs {self._event_shape}."
+            )
+
+        actual_shape = value.size()
+        expected_shape = self._batch_shape + self._event_shape
+        for i, j in zip(reversed(actual_shape), reversed(expected_shape)):
+            if i != 1 and j != 1 and i != j:
+                raise ValueError(
+                    f"Value is not broadcastable with batch_shape+event_shape: {actual_shape} vs {expected_shape}."
+                )
+        try:
+            support = self.support
+        except NotImplementedError:
+            warnings.warn(
+                f"{self.__class__} does not define `support` to enable "
+                + "sample validation. Please initialize the distribution with "
+                + "`validate_args=False` to turn off validation."
+            )
+            return
+        assert support is not None
+        valid = support.check(value)
+        if not valid.all():
+            raise ValueError(
+                "Expected value argument "
+                f"({type(value).__name__} of shape {tuple(value.shape)}) "
+                f"to be within the support ({repr(support)}) "
+                f"of the distribution {repr(self)}, "
+                f"but found invalid values:\n{value}"
+            )
+
+    def _get_checked_instance(self, cls, _instance=None):
+        if _instance is None and type(self).__init__ != cls.__init__:
+            raise NotImplementedError(
+                f"Subclass {self.__class__.__name__} of {cls.__name__} that defines a custom __init__ method "
+                "must also define a custom .expand() method."
+            )
+        return self.__new__(type(self)) if _instance is None else _instance
 
 
 class Categorical(Distribution):
-    r"""
-    Creates a categorical distribution parameterized by either :attr:`probs` or
-    :attr:`logits` (but not both).
-
-    .. note::
-        It is equivalent to the distribution that :func:`torch.multinomial`
-        samples from.
-
-    Samples are integers from :math:`\{0, \ldots, K-1\}` where `K` is ``probs.size(-1)``.
-
-    If `probs` is 1-dimensional with length-`K`, each element is the relative probability
-    of sampling the class at that index.
-
-    If `probs` is N-dimensional, the first N-1 dimensions are treated as a batch of
-    relative probability vectors.
-
-    .. note:: The `probs` argument must be non-negative, finite and have a non-zero sum,
-              and it will be normalized to sum to 1 along the last dimension. :attr:`probs`
-              will return this normalized value.
-              The `logits` argument will be interpreted as unnormalized log probabilities
-              and can therefore be any real number. It will likewise be normalized so that
-              the resulting probabilities sum to 1 along the last dimension. :attr:`logits`
-              will return this normalized value.
-
-    See also: :func:`torch.multinomial`
-
-    Example::
-
-        >>> # xdoctest: +IGNORE_WANT("non-deterministic")
-        >>> m = Categorical(torch.tensor([ 0.25, 0.25, 0.25, 0.25 ]))
-        >>> m.sample()  # equal probability of 0, 1, 2, 3
-        tensor(3)
-
-    Args:
-        probs (Tensor): event probabilities
-        logits (Tensor): event log probabilities (unnormalized)
-    """
+   
     arg_constraints = {"probs": constraints.simplex, "logits": constraints.real_vector}
-    has_enumerate_support = True
+    # has_enumerate_support = True
 
     def __init__(self, probs=None, logits=None, validate_args=None):
         if (probs is None) == (logits is None):
@@ -91,39 +148,15 @@ class Categorical(Distribution):
     def support(self):
         return constraints.integer_interval(0, self._num_events - 1)
 
-    @lazy_property
     def logits(self):
-        return probs_to_logits(self.probs)
+        with torch.enable_grad():
+            output = probs_to_logits(self.probs)
+        return output
 
     @lazy_property
     def probs(self):
-        return logits_to_probs(self.logits)
-
-    @property
-    def param_shape(self):
-        return self._param.size()
-
-    @property
-    def mean(self):
-        return torch.full(
-            self._extended_shape(),
-            nan,
-            dtype=self.probs.dtype,
-            device=self.probs.device,
-        )
-
-    @property
-    def mode(self):
-        return self.probs.argmax(axis=-1)
-
-    @property
-    def variance(self):
-        return torch.full(
-            self._extended_shape(),
-            nan,
-            dtype=self.probs.dtype,
-            device=self.probs.device,
-        )
+        output = logits_to_probs(self.logits)
+        return output
 
     def sample(self, sample_shape=torch.Size()):
         if not isinstance(sample_shape, torch.Size):
@@ -146,10 +179,5 @@ class Categorical(Distribution):
         p_log_p = logits * self.probs
         return -p_log_p.sum(-1)
 
-    def enumerate_support(self, expand=True):
-        num_events = self._num_events
-        values = torch.arange(num_events, dtype=torch.long, device=self._param.device)
-        values = values.view((-1,) + (1,) * len(self._batch_shape))
-        if expand:
-            values = values.expand((-1,) + self._batch_shape)
-        return values
+
+
