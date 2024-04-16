@@ -118,7 +118,7 @@ def main(args):
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
-                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_dg_csv.csv'))])),
+                        custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_progress.csv'))])),
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
