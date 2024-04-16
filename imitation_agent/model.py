@@ -3,17 +3,20 @@ from typing import Callable, Tuple
 import numpy as np
 import torch
 from torch import nn
-from torch.distributions import Categorical
+
+from imitation_agent.categorical import Categorical
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# @torch.jit.script
 class Distribution(nn.Module):
     def __init__(self, dimension : int):
         super(Distribution, self).__init__()
         self.dimension = dimension
         self.dummy = torch.Tensor((1,1))
 
+
     def create_prob_distribution(self, logits: torch.Tensor):
-        self.distribution = [Categorical(logits=split) for split in torch.split(logits, self.dimension, dim=1)]
+        self.distribution = [Categorical(probs=None, logits=split, validate_args=None) for split in torch.split(logits, self.dimension, dim=1)]
         return self
 
     def log_probability(self, actions: torch.Tensor):
@@ -28,15 +31,15 @@ class Distribution(nn.Module):
     def mode(self) -> torch.Tensor:
         return torch.stack([torch.argmax(dist.probs, dim=1) for dist in self.distribution], dim=1)
 
-    def actions_from_params(self, action_logits: torch.Tensor, deterministic: bool = False) -> torch.Tensor:
-        # Update the proba distribution
-        self.create_prob_distribution(action_logits)
-        return self.get_actions(deterministic=deterministic)
-
-    def log_prob_from_params(self, action_logits: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        actions = self.actions_from_params(action_logits)
-        log_prob = self.log_probability(actions)
-        return actions, log_prob
+    # def actions_from_params(self, action_logits: torch.Tensor, deterministic: bool = False) -> torch.Tensor:
+    #     # Update the proba distribution
+    #     self.create_prob_distribution(action_logits)
+    #     return self.get_actions(deterministic=deterministic)
+    #
+    # def log_prob_from_params(self, action_logits: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    #     actions = self.actions_from_params(action_logits)
+    #     log_prob = self.log_probability(actions)
+    #     return actions, log_prob
 
 class IceHockeyModel(nn.Module):
     def __init__(self,
@@ -109,7 +112,7 @@ class IceHockeyModel(nn.Module):
         log_probability = self.distribution.create_prob_distribution(actions_output).log_probability(actions)
         return self.value_net2(value_output), log_probability, self.distribution.entropy()
 
-    def predict(self, observation: np.ndarray, state : np.ndarray, episode_start: np.ndarray, deterministic:bool=True) -> np.ndarray:
+    def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=True):
         observation = torch.tensor(observation)
         observation = observation.to(torch.float32)
         self.train(False)
@@ -122,7 +125,7 @@ class IceHockeyModel(nn.Module):
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
         actions = self.distribution.create_prob_distribution(action_output).mode()
-        return  actions
+        return actions
 
     def _get_constructor_parameters(self):
         data = {}
