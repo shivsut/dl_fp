@@ -19,7 +19,7 @@ class Team:
         self.verbose = False
         self.use_model = False
 
-        model = 'test1_da_jit.pt'
+        model = 'only_test_jit.pt'
         path1 = path.join(path.dirname(path.abspath(__file__)), model)
         self.model_p0 = torch.jit.load(path1)
         self.model_p1 = torch.jit.load(path1)
@@ -81,6 +81,7 @@ class Team:
             # TODO: Use Policy to get the actions of each player
             if self.use_model:
                 features = extract_featuresV2(pstate, opponent_state, soccer_state, self.team)
+                features = torch.tensor(features)
                 if player_id % 2 == 0:
                     action = self.model_p0(features)
                 else:

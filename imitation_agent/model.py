@@ -73,16 +73,16 @@ class IceHockeyModel(nn.Module):
         return actions, state
     # @torch.jit.script
     def forward(self, observation):
-        observation = torch.tensor(observation)
-        observation = observation.to(self.device)
+        # observation = torch.tensor(observation)
+        # observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
         # action_output = action_output.to("cpu")
         res = []
         for split in torch.split(action_output, self.action_logits_dims_list):
-            split -= split.logsumexp(dim=-1, keepdim=True)
-            probs = torch.nn.functional.softmax(split, dim=-1)
-            res.append(torch.argmax(probs, dim=1))
+            new_split = split - split.logsumexp(dim=-1, keepdim=True)
+            probs = torch.nn.functional.softmax(new_split, dim=-1)
+            res.append(torch.argmax(probs))
         return res
 
         return  self.distribution_infer.proba_distribution(action_output)
