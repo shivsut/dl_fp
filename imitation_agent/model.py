@@ -82,18 +82,15 @@ class IceHockeyModel(nn.Module):
         for split in torch.split(action_output, self.action_logits_dims_list):
             new_split = split - split.logsumexp(dim=-1, keepdim=True)
             probs = torch.nn.functional.softmax(new_split, dim=-1)
-            res.append(torch.argmax(probs))
+            res.append(torch.argmax(probs, dim=-1))
         return res
-
-        return  self.distribution_infer.proba_distribution(action_output)
-        # return actions
     def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
         observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
         action_output = action_output.to("cpu")
         actions = self.distribution.proba_distribution(action_output)
-        return actions.sample()
+        return actions.sample() if deterministic else actions.mode()
 
     @torch.jit.ignore
     def init_dist(self):
