@@ -96,7 +96,7 @@ class IceHockeyModel(nn.Module):
         action_output = self.action_nn(policy_output)
         action_output = action_output.to("cpu")
         actions = self.distribution.proba_distribution(action_output)
-        return actions.sample() if deterministic else actions.mode()
+        return actions.mode() if deterministic else actions.sample()
 
     @torch.jit.ignore
     def init_dist(self):
