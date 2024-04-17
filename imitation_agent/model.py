@@ -23,7 +23,8 @@ class IceHockeyModel(nn.Module):
                  log_std_init: float = 0.0,
                  full_std: bool = True,
                  use_expln: bool = False,
-                 squash_output: bool = False):
+                 squash_output: bool = False,
+                 accel_div: int = 100):
 
         super(IceHockeyModel, self).__init__()
         self.observation_dim = observation_dim
@@ -38,6 +39,7 @@ class IceHockeyModel(nn.Module):
         self.use_expln = use_expln
         self.squash_output = squash_output
         self.lr_scheduler = lr_scheduler
+        self.accel_div = float(accel_div)
 
         self.policy_nn = nn.Sequential()
         self.value_nn = nn.Sequential()
@@ -82,7 +84,11 @@ class IceHockeyModel(nn.Module):
         for split in torch.split(action_output, self.action_logits_dims_list):
             new_split = split - split.logsumexp(dim=-1, keepdim=True)
             probs = torch.nn.functional.softmax(new_split, dim=-1)
-            res.append(torch.argmax(probs, dim=-1))
+            out = torch.argmax(probs, dim=-1)
+            out_new = out.to(torch.float32)
+            res.append(out_new)
+        res[0] /= self.accel_div
+        res[1] -= 1.0
         return res
     def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
         observation = observation.to(self.device)
@@ -121,7 +127,8 @@ class IceHockeyModel(nn.Module):
                 activation_function=self.activation_function,
                 log_std_init=self.log_std_init,
                 lr_schedule=0.0,  # dummy lr schedule, not needed for loading policy alone
-                ortho_init=self.ortho_init
+                ortho_init=self.ortho_init,
+                accel_div=self.accel_div
             )
         )
         return data

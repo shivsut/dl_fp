@@ -69,7 +69,8 @@ def main(args):
         action_space_dim=int(envs.action_space.shape[0]),
         action_logits_dims_list=envs.action_space.nvec.tolist(),
         lr_scheduler=torch.finfo(torch.float32).max,
-        net_arch=[512,512]
+        net_arch=[512,512],
+        accel_div=args.md
     )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
