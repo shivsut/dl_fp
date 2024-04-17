@@ -126,9 +126,10 @@ def main(args):
                                          bc_train_kwargs={'progress_bar':False}
                                         )
                     # bc_trainer._policy.save(f"{policy_dir.name}/hockey.pt")
+        bc_trainer._policy.eval()
+        m = torch.jit.script(bc_trainer._policy)
+        torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         bc_trainer._policy.save(f"{data_dir}/{args.variant}.pt")
-        # m = torch.jit.script(bc_trainer._policy)
-        # torch.jit.save(m,f"{data_dir}/{args.variant}_jit.pt")
         policy_dir.cleanup()
         
     print(f"Evaluating")
