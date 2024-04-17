@@ -52,11 +52,12 @@ class DummyTeam():
         pass
 
 class IceHockeyLearner(gymnasium.Env):
-    def __init__(self, args, expert='jurgen_agent', logging_level=None):
+    def __init__(self, args, expert='jurgen_agent', logging_level=None, print_episode_result=False):
         self.num_envs =1
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
+        self.print_episode_result = print_episode_result
         pi = np.pi
         x_max = 40
         y_max = 66
@@ -140,7 +141,9 @@ class IceHockeyLearner(gymnasium.Env):
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
-        self.team1 = DummyTeam(self.num_players, 0)
+        self.team_id = 0
+        self.opponent_team_id = 1
+        self.team1 = DummyTeam(self.num_players, self.team_id )
         if self.args.use_opponent:
             self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
 
@@ -149,9 +152,9 @@ class IceHockeyLearner(gymnasium.Env):
         self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=num_kart * self.num_players)
         self.race_config.players.pop()
         for _ in range(self.num_players):
-            self.race_config.players.append(self._make_config(0, False, 'tux'))
+            self.race_config.players.append(self._make_config(self.team_id, False, 'tux'))
             if self.args.use_opponent:
-                self.race_config.players.append(self._make_config(1, True if args.opponent == 'ai' else False, 'tux'))
+                self.race_config.players.append(self._make_config(self.opponent_team_id, True if args.opponent == 'ai' else False, 'tux'))
         # self.reset()
         # self.race = self._pystk.Race(self.race_config)
 
@@ -203,7 +206,9 @@ class IceHockeyLearner(gymnasium.Env):
         # print(f"reward: {reward}")
         # print (p_features)
         # self.terminated = True
-        return  p_features, np.array(-1 if soccer_state['score'][0] ==0 else 1, dtype=float), self.terminated , self.truncated, {'terminal_observation': p_features}
+        if self.print_episode_result and (self.truncated or self.terminated):
+            print (f"Results : [{soccer_state['score'][self.team_id]}, {soccer_state['score'][self.opponent_team_id]}] ({self.current_timestep})")
+        return p_features, np.array(soccer_state['score'][self.team_id] - soccer_state['score'][self.opponent_team_id], dtype=float), self.terminated , self.truncated, {'terminal_observation': p_features}
 
     def step_async(self, action):
         self.async_res= self.step(action)

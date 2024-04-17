@@ -133,7 +133,7 @@ def main(args):
         
     print(f"Evaluating")
     args.record_fn=f'{data_dir}/{args.variant}.mp4'
-    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR')) for _ in range(1)])
+    envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR', print_episode_result=True)) for _ in range(1)])
     # expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, args.expert)
     bc_trainer_eval = bc.BC(
             observation_space=envs_eval.observation_space,
