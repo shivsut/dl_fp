@@ -52,16 +52,16 @@ def main(args):
     data_dir = os.path.join(os.getcwd(), args.variant)
     envs = SubprocVecEnv(
         [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
-    policy_ac = FeedForward32Policy(
-        observation_space=envs.observation_space,
-        action_space=envs.action_space,
-        lr_schedule=lambda _: torch.finfo(torch.float32).max,
-        net_arch=[512, 512]
-        # Set lr_schedule to max value to force error if policy.optimizer
-        # is used by mistake (should use self.optimizer instead).
-        # features_extractor_class=extractor
-
-    )
+    # policy_ac = FeedForward32Policy(
+    #     observation_space=envs.observation_space,
+    #     action_space=envs.action_space,
+    #     lr_schedule=lambda _: torch.finfo(torch.float32).max,
+    #     net_arch=[512, 512]
+    #     # Set lr_schedule to max value to force error if policy.optimizer
+    #     # is used by mistake (should use self.optimizer instead).
+    #     # features_extractor_class=extractor
+    #
+    # )
     action_logits_dim= envs.action_space.nvec.sum().item()
     policy_ac = IceHockeyModel(
         observation_dim=int(envs.observation_space.shape[0]),
@@ -70,7 +70,8 @@ def main(args):
         action_logits_dims_list=envs.action_space.nvec.tolist(),
         lr_scheduler=torch.finfo(torch.float32).max,
         net_arch=[512,512],
-        accel_div=args.md
+        accel_div=args.md,
+        batch_size=args.batch_size
     )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)

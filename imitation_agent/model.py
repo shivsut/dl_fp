@@ -4,7 +4,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution
+from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution, \
+    DiagGaussianDistribution
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -24,7 +25,8 @@ class IceHockeyModel(nn.Module):
                  full_std: bool = True,
                  use_expln: bool = False,
                  squash_output: bool = False,
-                 accel_div: int = 100):
+                 accel_div: int = 100,
+                 batch_size: int = 64):
 
         super(IceHockeyModel, self).__init__()
         self.observation_dim = observation_dim
@@ -40,21 +42,23 @@ class IceHockeyModel(nn.Module):
         self.squash_output = squash_output
         self.lr_scheduler = lr_scheduler
         self.accel_div = float(accel_div)
+        self.batch_size = batch_size
 
         self.policy_nn = nn.Sequential()
-        self.value_nn = nn.Sequential()
+        # self.value_nn = nn.Sequential()
         self.action_nn = nn.Sequential()
 
         prev_layer_dim = observation_dim
         for layer in self.net_arch:
             self.policy_nn.append(nn.Linear(prev_layer_dim, layer))
-            self.value_nn.append(nn.Linear(prev_layer_dim, layer))
+            # self.value_nn.append(nn.Linear(prev_layer_dim, layer))
             self.policy_nn.append(self.activation_function())
-            self.value_nn.append(self.activation_function())
+            # self.value_nn.append(self.activation_function())
             prev_layer_dim = layer
 
-        self.value_net2 = nn.Linear(prev_layer_dim, 1)
-        self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
+        # self.value_net2 = nn.Linear(prev_layer_dim, 1)
+        # self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
+        self.action_nn.append(nn.Linear(prev_layer_dim, 6))
 
         self.device = device
 
@@ -65,6 +69,20 @@ class IceHockeyModel(nn.Module):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=lr_scheduler)
 
 
+    @torch.jit.ignore
+    def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        observation = nn.Flatten()(observation).to(torch.float32)
+        policy_output = self.policy_nn(observation)
+        # value_output = self.value_nn(observation)
+        actions_output = self.action_nn(policy_output)
+        # actions_output0 = actions_output.gather(1, self.action0_mask)
+        # actions_output1 = actions_output.gather(1, self.action1_mask)
+        # actions0 = actions.ga
+        log_probability0 = self.distribution0.proba_distribution(actions_output[:, 0].unsqueeze(1), self.log_std).log_prob(actions[:,0].unsqueeze(1)).unsqueeze(1)
+        log_probability1 = self.distribution1.proba_distribution(actions_output[:, 1:]).log_prob(actions[:, 1:]).unsqueeze(1)
+        log_prob = log_probability0 + log_probability1
+        return None, log_prob, self.distribution1.entropy()
+
     def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=False):
         observation = torch.tensor(observation)
         observation = observation.to(torch.float32)
@@ -72,7 +90,20 @@ class IceHockeyModel(nn.Module):
         with torch.no_grad():
             actions = self.predict_action(observation, deterministic)
         actions.cpu().numpy().reshape((-1, self.action_space_dim))
-        return actions, state
+        return [actions], state
+    def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
+        observation = observation.to(self.device)
+        policy_output = self.policy_nn(observation)
+        action_output = self.action_nn(policy_output)
+        action_output = action_output.to("cpu")
+
+        action0 = self.distribution0.proba_distribution(action_output[:, 0].unsqueeze(1), self.log_std).sample()
+        action1 = self.distribution1.proba_distribution(action_output[:, 1:]).sample()
+        actions = torch.cat((action0, action1), dim=1)
+        actions = actions.squeeze(0)
+        # actions = self.distribution.proba_distribution(action_output)
+        # return actions.sample() if deterministic else actions.mode()
+        return actions
     # @torch.jit.script
     def forward(self, observation):
         # observation = torch.tensor(observation)
@@ -90,26 +121,14 @@ class IceHockeyModel(nn.Module):
         res[0] /= self.accel_div
         res[1] -= 1.0
         return res
-    def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
-        observation = observation.to(self.device)
-        policy_output = self.policy_nn(observation)
-        action_output = self.action_nn(policy_output)
-        action_output = action_output.to("cpu")
-        actions = self.distribution.proba_distribution(action_output)
-        return actions.sample() if deterministic else actions.mode()
 
     @torch.jit.ignore
     def init_dist(self):
-        self.distribution = MultiCategoricalDistribution(self.action_logits_dims_list)
+        log_std_init = float(0.0)
+        self.distribution0 = DiagGaussianDistribution(1)
+        self.log_std = nn.Parameter(torch.ones(1) * log_std_init, requires_grad=True)
+        self.distribution1 = MultiCategoricalDistribution(self.action_logits_dims_list[1:])
 
-    @torch.jit.ignore
-    def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        observation = nn.Flatten()(observation).to(torch.float32)
-        policy_output = self.policy_nn(observation)
-        value_output = self.value_nn(observation)
-        actions_output = self.action_nn(policy_output)
-        log_probability = self.distribution.proba_distribution(actions_output).log_prob(actions)
-        return self.value_net2(value_output), log_probability, self.distribution.entropy()
 
 
         # return actions.mode() if deterministic else actions.sample()

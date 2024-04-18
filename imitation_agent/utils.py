@@ -22,13 +22,13 @@ class discretization:
     def __call__(self, x):
         # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html
         # inds =
-        closest_actions_idx = torch.abs(self.bins - x[0]).argmin()
+        # closest_actions_idx = torch.abs(self.bins - x[0]).argmin()
         # discretized_value = [self.bins[i][inds[i]-1] for i in range(self.naction)]
         # return self.bins[closest_actions]
-        x[0] = int(self.bins[0,closest_actions_idx] * self.accel_div)
+        # x[0] = int(self.bins[0,closest_actions_idx] * self.accel_div)
         x[1] = int(x[1] + 1)
         x[2] = int(x[2])
-        x = x.to(int)
+        # x = x.to(int)
         return x
 
     def de_discrete(self, action):
@@ -36,7 +36,7 @@ class discretization:
             action = action.astype(np.float32)
         else:
             action = action.to(torch.float32)
-        action[0] /= float(self.accel_div)
+        # action[0] /= float(self.accel_div)
         action[1] -= 1.0
         return action
 
