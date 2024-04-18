@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution, \
-    DiagGaussianDistribution
+    DiagGaussianDistribution, SquashedDiagGaussianDistribution
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -99,6 +99,7 @@ class IceHockeyModel(nn.Module):
         action_output = action_output.to("cpu")
 
         action0 = self.distribution0.proba_distribution(action_output[:, 0].unsqueeze(1), self.log_std).sample()
+        action0 = action0.clip(0, 1)
         action1 = self.distribution1.proba_distribution(action_output[:, 1:]).sample()
         actions = torch.cat((action0, action1), dim=1)
         # actions = actions.squeeze(0)
