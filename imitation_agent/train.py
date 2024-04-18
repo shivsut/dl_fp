@@ -62,12 +62,14 @@ def main(args):
         # features_extractor_class=extractor
 
     )
-    action_logits_dim= envs.action_space.nvec.sum().item()
+    action_logits_dim = 0
+    if args.md:
+        action_logits_dim= envs.action_space.nvec.sum().item()
     policy_ac = IceHockeyModel(
         observation_dim=int(envs.observation_space.shape[0]),
         action_logits_dim=action_logits_dim,
         action_space_dim=int(envs.action_space.shape[0]),
-        action_logits_dims_list=envs.action_space.nvec.tolist(),
+        action_logits_dims_list=envs.action_space.nvec.tolist() if args.md else 0,
         lr_scheduler=torch.finfo(torch.float32).max,
         net_arch=[512,512],
         accel_div=args.md

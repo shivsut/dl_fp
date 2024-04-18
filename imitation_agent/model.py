@@ -4,7 +4,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution
+from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution, \
+    CategoricalDistribution
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -39,7 +40,7 @@ class IceHockeyModel(nn.Module):
         self.use_expln = use_expln
         self.squash_output = squash_output
         self.lr_scheduler = lr_scheduler
-        self.accel_div = float(accel_div)
+        self.accel_div = float(accel_div) if accel_div is not None else None
 
         self.policy_nn = nn.Sequential()
         self.value_nn = nn.Sequential()
@@ -54,7 +55,10 @@ class IceHockeyModel(nn.Module):
             prev_layer_dim = layer
 
         self.value_net2 = nn.Linear(prev_layer_dim, 1)
-        self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
+        if accel_div:
+            self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
+        else:
+            self.action_nn.append(nn.Linear(prev_layer_dim, 3))
 
         self.device = device
 
@@ -100,7 +104,10 @@ class IceHockeyModel(nn.Module):
 
     @torch.jit.ignore
     def init_dist(self):
-        self.distribution = MultiCategoricalDistribution(self.action_logits_dims_list)
+        if self.accel_div:
+            self.distribution = MultiCategoricalDistribution(self.action_logits_dims_list)
+        else:
+            self.distribution = CategoricalDistribution(3)
 
     @torch.jit.ignore
     def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
