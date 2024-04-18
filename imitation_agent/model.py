@@ -81,6 +81,7 @@ class IceHockeyModel(nn.Module):
         log_probability0 = self.distribution0.proba_distribution(actions_output[:, 0].unsqueeze(1), self.log_std).log_prob(actions[:,0].unsqueeze(1)).unsqueeze(1)
         log_probability1 = self.distribution1.proba_distribution(actions_output[:, 1:]).log_prob(actions[:, 1:]).unsqueeze(1)
         log_prob = log_probability0 + log_probability1
+        log_prob = log_prob.squeeze(1)
         return None, log_prob, self.distribution1.entropy()
 
     def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=False):
@@ -90,7 +91,7 @@ class IceHockeyModel(nn.Module):
         with torch.no_grad():
             actions = self.predict_action(observation, deterministic)
         actions.cpu().numpy().reshape((-1, self.action_space_dim))
-        return [actions], state
+        return actions, state
     def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
         observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
@@ -100,7 +101,7 @@ class IceHockeyModel(nn.Module):
         action0 = self.distribution0.proba_distribution(action_output[:, 0].unsqueeze(1), self.log_std).sample()
         action1 = self.distribution1.proba_distribution(action_output[:, 1:]).sample()
         actions = torch.cat((action0, action1), dim=1)
-        actions = actions.squeeze(0)
+        # actions = actions.squeeze(0)
         # actions = self.distribution.proba_distribution(action_output)
         # return actions.sample() if deterministic else actions.mode()
         return actions
