@@ -50,6 +50,7 @@ class FeedForward32Policy(policies.ActorCriticPolicy):
 def main(args):
     rng = np.random.default_rng(0)
     data_dir = os.path.join(os.getcwd(), args.variant)
+    yo = IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')
     envs = SubprocVecEnv(
         [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
     policy_ac = FeedForward32Policy(
@@ -166,6 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')
+    parser.add_argument('--otherSide', action='store_true', help="Play from other side (bottom)")
     parser.add_argument('--expert', default='yann_agent')
     parser.add_argument('--md', type=int, required=False)
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
