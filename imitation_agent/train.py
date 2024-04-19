@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from random import shuffle
 import numpy as np
 import gymnasium as gym
+from torch import nn
 
 from imitation_agent.model import IceHockeyModel
 from imitation_local.algorithms import bc
@@ -52,16 +53,21 @@ def main(args):
     data_dir = os.path.join(os.getcwd(), args.variant)
     envs = SubprocVecEnv(
         [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
-    policy_ac = FeedForward32Policy(
-        observation_space=envs.observation_space,
-        action_space=envs.action_space,
-        lr_schedule=lambda _: torch.finfo(torch.float32).max,
-        net_arch=[512, 512]
-        # Set lr_schedule to max value to force error if policy.optimizer
-        # is used by mistake (should use self.optimizer instead).
-        # features_extractor_class=extractor
+    # policy_ac = FeedForward32Policy(
+    #     observation_space=envs.observation_space,
+    #     action_space=envs.action_space,
+    #     lr_schedule=lambda _: torch.finfo(torch.float32).max,
+    #     net_arch=[512, 512]
+    #     # Set lr_schedule to max value to force error if policy.optimizer
+    #     # is used by mistake (should use self.optimizer instead).
+    #     # features_extractor_class=extractor
+    #
+    # )
+    if args.act_fn == "tanh":
+        activation_function = nn.Tanh
+    elif args.act_fn == "relu":
+        activation_function = nn.ReLU
 
-    )
     action_logits_dim= envs.action_space.nvec.sum().item()
     policy_ac = IceHockeyModel(
         observation_dim=int(envs.observation_space.shape[0]),
@@ -69,7 +75,8 @@ def main(args):
         action_space_dim=int(envs.action_space.shape[0]),
         action_logits_dims_list=envs.action_space.nvec.tolist(),
         lr_scheduler=torch.finfo(torch.float32).max,
-        net_arch=[512,512],
+        net_arch=[int(x) for x in args.net_arch.split(',')],
+        activation_function=activation_function,
         accel_div=args.md
     )
     if not args.only_inference:
@@ -159,9 +166,6 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time_steps', type=int, default=6000)
     parser.add_argument('-e', '--epochs', type=int, default=10)
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=10)
-    parser.add_argument('--deterministic', action='store_true')
-    parser.add_argument('--tensor_log', action='store_true')
-    parser.add_argument('--debug_mode', action='store_true')
     parser.add_argument('--only_inference', action='store_true')
     parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
@@ -171,6 +175,8 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
     parser.add_argument('--resume_training', type=str)
+    parser.add_argument('--net_arch', type=str, default="512,512")
+    parser.add_argument('--act_fn', type=str, default="tanh")
 
     args = parser.parse_args()
     main(args)
