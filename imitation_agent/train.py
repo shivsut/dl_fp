@@ -176,7 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('-bs', '--batch_size', type=int, default=128)
     parser.add_argument('--resume_training', type=str)
     parser.add_argument('--net_arch', type=str, default="512,512")
-    parser.add_argument('--act_fn', type=str, default="tanh")
+    parser.add_argument('--act_fn', type=str, default="tanh", choices=['tanh', 'relu'])
 
     args = parser.parse_args()
     main(args)

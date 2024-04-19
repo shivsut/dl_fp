@@ -60,6 +60,7 @@ class IceHockeyLearner(gymnasium.Env):
         pi = np.pi
         x_max = 47
         y_max = 80
+        goal_center = 64.5
         # pi = 3.2
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
@@ -101,12 +102,12 @@ class IceHockeyLearner(gymnasium.Env):
             #                          puck_to_goal_line[0],
             #                          puck_to_goal_line[1]],
             #                         dtype=torch.float32)
-            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -0.1, y_max-1, -1, -x_max,  -y_max,  -1,  0]),
-                                                high=np.array([x_max,  y_max,  pi,  pi,  0.1, y_max+1,  1,  x_max,   y_max,   1,  1]),
+            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -0.1, goal_center-1, -1, -x_max,  -y_max,  -1,  0]),
+                                                high=np.array([x_max,  y_max,  pi,  pi,  0.1, goal_center+1,  1,  x_max,   y_max,   1,  1]),
                                                 dtype=np.float32)
         else:
-            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -x_max, -y_max, -x_max, -y_max, -pi, -pi, -0.1, y_max-1, -pi, -1, -1, -1, -1]),
-                                                high=np.array([x_max,  y_max,  pi,  pi,  x_max,  y_max,  x_max,  y_max,  pi,  pi,  0.1, y_max+1,  pi,  1,  1,  1, 1]),
+            self.observation_space = spaces.Box(low=np.array([-x_max, -y_max, -pi, -pi, -x_max, -y_max, -x_max, -y_max, -pi, -pi, -0.1, goal_center-1, -pi, -1, -1, -1, -1]),
+                                                high=np.array([x_max,  y_max,  pi,  pi,  x_max,  y_max,  x_max,  y_max,  pi,  pi,  0.1, goal_center+1,  pi,  1,  1,  1, 1]),
                                                 dtype=np.float32)
         # features = torch.tensor([kart_center[0],
         # kart_center[1],
