@@ -179,12 +179,11 @@ class IceHockeyLearner(gymnasium.Env):
 
         if self.recorder:
             self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=team1_actions,team1_images=None, team2_images=None)
-
-        if (not self.race.step([self._pystk.Action(**a) for a in team1_actions]) and self.num_players):
-            self.truncated = True
+        all_team_actions = team1_actions
         if self.args.opponent != 'ai' and self.args.use_opponent:
-            if (not self.race.step([self._pystk.Action(**a) for a in team2_actions]) and self.num_players):
-                self.truncated = True
+            all_team_actions += team2_actions
+        if (not self.race.step([self._pystk.Action(**a) for a in all_team_actions]) and self.num_players):
+            self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
             self.terminated = True
         if not (self.truncated or self.terminated):
