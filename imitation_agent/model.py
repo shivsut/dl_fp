@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from stable_baselines3_local.common.distributions import Distribution, MultiCategoricalDistribution, \
-    CategoricalDistribution
+    CategoricalDistribution, DiagGaussianDistribution
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -58,6 +58,7 @@ class IceHockeyModel(nn.Module):
         if accel_div:
             self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
         else:
+            self.log_std = nn.Parameter(torch.ones(3) * 0.0, requires_grad=True)
             self.action_nn.append(nn.Linear(prev_layer_dim, 3))
 
         self.device = device
@@ -99,7 +100,10 @@ class IceHockeyModel(nn.Module):
         policy_output = self.policy_nn(observation)
         action_output = self.action_nn(policy_output)
         action_output = action_output.to("cpu")
-        actions = self.distribution.proba_distribution(action_output)
+        if self.accel_div:
+            actions = self.distribution.proba_distribution(action_output)
+        else:
+            actions = self.distribution.proba_distribution(action_output, self.log_std)
         return actions.mode() if deterministic else actions.sample()
 
     @torch.jit.ignore
@@ -107,7 +111,7 @@ class IceHockeyModel(nn.Module):
         if self.accel_div:
             self.distribution = MultiCategoricalDistribution(self.action_logits_dims_list)
         else:
-            self.distribution = CategoricalDistribution(3)
+            self.distribution = DiagGaussianDistribution(3)
 
     @torch.jit.ignore
     def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -115,7 +119,10 @@ class IceHockeyModel(nn.Module):
         policy_output = self.policy_nn(observation)
         value_output = self.value_nn(observation)
         actions_output = self.action_nn(policy_output)
-        log_probability = self.distribution.proba_distribution(actions_output).log_prob(actions)
+        if self.accel_div:
+            log_probability = self.distribution.proba_distribution(actions_output).log_prob(actions)
+        else:
+            log_probability = self.distribution.proba_distribution(actions_output, self.log_std).log_prob(actions)
         return self.value_net2(value_output), log_probability, self.distribution.entropy()
 
 
