@@ -170,6 +170,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')
+    parser.add_argument('--bottom', action='store_true', help="Changes the learner position from top(default) to bottom")
     parser.add_argument('--expert', default='yann_agent')
     parser.add_argument('--md', type=int, required=False)
     parser.add_argument('--device', type=str, default='cuda', choices=['cpu', 'cuda'])
