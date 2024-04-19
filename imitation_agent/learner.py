@@ -9,7 +9,6 @@ from imitation_agent.features import extract_features, extract_featuresV2
 
 TRACK_NAME = 'icy_soccer_field'
 MAX_FRAMES = 1000
-
 RunnerInfo = namedtuple('RunnerInfo', ['agent_type', 'error', 'total_act_time'])
 
 import gym
@@ -59,8 +58,8 @@ class IceHockeyLearner(gymnasium.Env):
         self.logging_level = logging_level
         self.print_episode_result = print_episode_result
         pi = np.pi
-        x_max = 40
-        y_max = 66
+        x_max = 47
+        y_max = 80
         # pi = 3.2
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
@@ -137,7 +136,7 @@ class IceHockeyLearner(gymnasium.Env):
         # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
         # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
-        self.max_timestep = 2000
+        self.max_timestep = 3000
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
@@ -157,6 +156,7 @@ class IceHockeyLearner(gymnasium.Env):
                 self.race_config.players.append(self._make_config(self.opponent_team_id, True if args.opponent == 'ai' else False, 'tux'))
         # self.reset()
         # self.race = self._pystk.Race(self.race_config)
+
 
     def _make_config(self, team_id, is_ai, kart):
         PlayerConfig = self._pystk.PlayerConfig

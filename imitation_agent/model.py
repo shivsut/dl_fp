@@ -48,13 +48,13 @@ class IceHockeyModel(nn.Module):
         prev_layer_dim = observation_dim
         for layer in self.net_arch:
             self.policy_nn.append(nn.Linear(prev_layer_dim, layer))
-            self.value_nn.append(nn.Linear(prev_layer_dim, layer))
+            # self.value_nn.append(nn.Linear(prev_layer_dim, layer))
             self.policy_nn.append(self.activation_function())
-            self.value_nn.append(self.activation_function())
+            # self.value_nn.append(self.activation_function())
             prev_layer_dim = layer
 
-        self.value_net2 = nn.Linear(prev_layer_dim, 1)
-        self.action_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
+        # self.value_net2 = nn.Linear(prev_layer_dim, 1)
+        self.policy_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
 
         self.device = device
 
@@ -78,10 +78,10 @@ class IceHockeyModel(nn.Module):
         # observation = torch.tensor(observation)
         # observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
-        action_output = self.action_nn(policy_output)
+        # action_output = self.action_nn(policy_output)
         # action_output = action_output.to("cpu")
         res = []
-        for split in torch.split(action_output, self.action_logits_dims_list):
+        for split in torch.split(policy_output, self.action_logits_dims_list):
             new_split = split - split.logsumexp(dim=-1, keepdim=True)
             probs = torch.nn.functional.softmax(new_split, dim=-1)
             out = torch.argmax(probs, dim=-1)
@@ -93,8 +93,8 @@ class IceHockeyModel(nn.Module):
     def predict_action(self, observation: torch.Tensor, deterministic=False) -> torch.Tensor:
         observation = observation.to(self.device)
         policy_output = self.policy_nn(observation)
-        action_output = self.action_nn(policy_output)
-        action_output = action_output.to("cpu")
+        # action_output = self.action_nn(policy_output)
+        action_output = policy_output.to("cpu")
         actions = self.distribution.proba_distribution(action_output)
         return actions.mode() if deterministic else actions.sample()
 
@@ -106,10 +106,10 @@ class IceHockeyModel(nn.Module):
     def evaluate_actions(self, observation: torch.Tensor, actions: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         observation = nn.Flatten()(observation).to(torch.float32)
         policy_output = self.policy_nn(observation)
-        value_output = self.value_nn(observation)
-        actions_output = self.action_nn(policy_output)
-        log_probability = self.distribution.proba_distribution(actions_output).log_prob(actions)
-        return self.value_net2(value_output), log_probability, self.distribution.entropy()
+        # value_output = self.value_nn(observation)
+        # actions_output = self.action_nn(policy_output)
+        log_probability = self.distribution.proba_distribution(policy_output).log_prob(actions)
+        return None, log_probability, self.distribution.entropy()
 
 
         # return actions.mode() if deterministic else actions.sample()
