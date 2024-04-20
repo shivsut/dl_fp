@@ -177,6 +177,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume_training', type=str)
     parser.add_argument('--net_arch', type=str, default="512,512")
     parser.add_argument('--act_fn', type=str, default="tanh", choices=['tanh', 'relu'])
+    parser.add_argument('--team', type=str, default="blue", choices=['blue', 'red'])
 
     args = parser.parse_args()
     main(args)

@@ -60,7 +60,7 @@ class IceHockeyLearner(gymnasium.Env):
         pi = np.pi
         x_max = 47
         y_max = 80
-        goal_center = 64.5
+        goal_center = 64.5 if args.team == "blue" else -64.5
         # pi = 3.2
         self.extract_state_train = extract_featuresV2 if expert=='jurgen_agent' else extract_features
         super(IceHockeyLearner, self).__init__()
@@ -134,29 +134,29 @@ class IceHockeyLearner(gymnasium.Env):
             logging.basicConfig(level=self.logging_level)
         self.recorder = VideoRecorder(self.args.record_fn) if self.args.record_fn else None
 
-        # self.team1 = AIRunner() if kwargs['team1'] == 'AI' else TeamRunner("")
-        # self.team2 = AIRunner() if kwargs['team2'] == 'AI' else TeamRunner("")
         self.timeout = 1e10
-        self.max_timestep = 3000
+        self.max_timestep = 500
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
-        self.team_id = 0
-        self.opponent_team_id = 1
-        self.team1 = DummyTeam(self.num_players, self.team_id )
+        self.my_team_id = 0
+        self.opp_team_id = 1
+        if args.team=="red":
+            self.my_team_id, self.opp_team_id = self.opp_team_id, self.my_team_id
+        self.my_team = DummyTeam(self.num_players, self.my_team_id)
         if self.args.use_opponent:
-            self.team2 = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
+            self.opponent_team = AIRunner() if self.args.opponent == 'ai' else TeamRunner(args.opponent)
 
         self.info = {}
         num_kart = 2 if self.args.use_opponent else 1
         self.race_config = self._pystk.RaceConfig(track=TRACK_NAME, mode=self._pystk.RaceConfig.RaceMode.SOCCER, num_kart=num_kart * self.num_players)
         self.race_config.players.pop()
-        for _ in range(self.num_players):
-            self.race_config.players.append(self._make_config(self.team_id, False, 'tux'))
-            if self.args.use_opponent:
-                self.race_config.players.append(self._make_config(self.opponent_team_id, True if args.opponent == 'ai' else False, 'tux'))
-        # self.reset()
-        # self.race = self._pystk.Race(self.race_config)
+        player_cfgs = [{"team_id":self.my_team_id, "is_ai": False, "kart":'tux'}]
+        player_cfgs.append({"team_id": self.opp_team_id, "is_ai": True if args.opponent == 'ai' else False, "kart": 'tux'})
+        if args.team == "red":
+            player_cfgs.reverse()
+        for cfg in player_cfgs:
+            self.race_config.players.append(self._make_config(**cfg))
 
 
     def _make_config(self, team_id, is_ai, kart):
@@ -168,21 +168,26 @@ class IceHockeyLearner(gymnasium.Env):
 
         action = self.discrete.de_discrete(action) if self.discrete else action
         self.current_timestep += 1
-        team1_state = [to_native(p) for p in self.state.players[0:1]]
-        team2_state = [to_native(p) for p in self.state.players[1:2]]
+
+        my_team_state = to_native(self.state.players[self.my_team_id])
+        opp_team_state = to_native(self.state.players[self.opp_team_id])
         soccer_state = to_native(self.state.soccer)
         logging.info('calling agent')
-        team1_actions = self.team1.act(action)
-        team2_actions = self.team2.act(team2_state, team1_state, soccer_state) if self.args.use_opponent else []
+        my_team_actions = self.my_team.act(action)
+        opponent_team_actions = self.opponent_team.act([opp_team_state], [my_team_state], soccer_state) if self.args.use_opponent else []
 
         # TODO check for error in info and raise MatchException
         # TODO check for timeout
 
         if self.recorder:
-            self.recorder(team1_state, team2_state, soccer_state=soccer_state, actions=team1_actions,team1_images=None, team2_images=None)
-        all_team_actions = team1_actions
-        if self.args.opponent != 'ai' and self.args.use_opponent:
-            all_team_actions += team2_actions
+            self.recorder([my_team_state], [opp_team_state], soccer_state=soccer_state, actions=my_team_actions,team1_images=None, team2_images=None)
+        if self.args.opponent == 'ai':
+            opponent_team_actions = [{'steer':0, 'acceleration':0, 'brake':False, 'nitro':False, 'drift':False, 'rescue':False, 'fire':False}]
+        all_team_actions = my_team_actions
+        if self.args.use_opponent:
+            all_team_actions += opponent_team_actions
+        if self.args.team == "red":
+            all_team_actions.reverse()
         if (not self.race.step([self._pystk.Action(**a) for a in all_team_actions]) and self.num_players):
             self.truncated = True
         if (sum(self.state.soccer.score) >= self.max_score) or (self.current_timestep > self.max_timestep):
@@ -193,11 +198,13 @@ class IceHockeyLearner(gymnasium.Env):
             self.num_envs = 0
 
         logging.info('state updated, calculating reward')
-        team1_state_next = [to_native(p) for p in self.state.players[0:1]]
-        team2_state_next = [to_native(p) for p in self.state.players[1:2]]
+        my_team_state_next = to_native(self.state.players[self.my_team_id])
+        opponent_team_state_next = to_native(self.state.players[self.opp_team_id])
+        # if self.args.team =="red":
+        #     team1_state_next, team2_state_next = team2_state_next, team1_state_next
         soccer_state = to_native(self.state.soccer)
-        opponent_state = team2_state_next[0] if self.args.use_opponent else team2_state_next
-        p_features = np.array(self.extract_state_train(team1_state_next[0], opponent_state, soccer_state, 0).flatten().tolist())
+        opponent_state = opponent_team_state_next
+        p_features = np.array(self.extract_state_train(my_team_state_next, [opponent_state], soccer_state, self.my_team_id).flatten().tolist())
         if np.isnan(p_features).any():
             self.terminated = True
 
@@ -207,8 +214,8 @@ class IceHockeyLearner(gymnasium.Env):
         # print (p_features)
         # self.terminated = True
         if self.print_episode_result and (self.truncated or self.terminated):
-            print (f"Results : [{soccer_state['score'][self.team_id]}, {soccer_state['score'][self.opponent_team_id]}] ({self.current_timestep})")
-        return p_features, np.array(soccer_state['score'][self.team_id] - soccer_state['score'][self.opponent_team_id], dtype=float), self.terminated , self.truncated, {'terminal_observation': p_features}
+            print (f"Results : [{soccer_state['score'][self.my_team_id]}, {soccer_state['score'][self.opp_team_id]}] ({self.current_timestep})")
+        return p_features, np.array(soccer_state['score'][self.my_team_id] - soccer_state['score'][self.opp_team_id], dtype=float), self.terminated , self.truncated, {'terminal_observation': p_features}
 
     def step_async(self, action):
         self.async_res= self.step(action)
@@ -218,7 +225,6 @@ class IceHockeyLearner(gymnasium.Env):
     def reset(self, seed=1, options=None):
         self.current_timestep = 0
         self.async_res = None
-        self.num_envs = 1
         # super().reset(seed=seed)
         logging.info('Resetting')
         # self.recorder = VideoRecorder('infer.mp4') if self.args.record_fn else None
@@ -232,15 +238,18 @@ class IceHockeyLearner(gymnasium.Env):
         self.race = self._pystk.Race(self.race_config)
         self.race.start()
         if self.args.use_opponent:
-            self.team2.new_match(1, 1)
+            self.opponent_team.new_match(self.opp_team_id, 1)
+        self.my_team.new_match()
         self.state = self._pystk.WorldState()
         self.state.update() # TODO need to call this here?
 
-        team1_state_next = [to_native(p) for p in self.state.players[0:1]]
-        team2_state_next = [to_native(p) for p in self.state.players[1:2]]
+        my_team_state = to_native(self.state.players[self.my_team_id])
+        opp_team_state = to_native(self.state.players[self.opp_team_id])
+        # if self.args.team=="red":
+        #     team1_state_next, team2_state_next = team2_state_next, team1_state_next
         soccer_state = to_native(self.state.soccer)
-        opponent_state = team2_state_next[0] if self.args.use_opponent else team2_state_next
-        p_features = self.extract_state_train(team1_state_next[0], opponent_state, soccer_state, 0).flatten().tolist()
+        opponent_state = opp_team_state
+        p_features = self.extract_state_train(my_team_state, [opponent_state], soccer_state, self.my_team_id).flatten().tolist()
         return np.array(p_features), {'terminal_observation': np.array(p_features)}
 
     def close(self):
