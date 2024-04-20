@@ -23,7 +23,9 @@ from stable_baselines3_local.common.vec_env import SubprocVecEnv
 
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
-from imitation_agent.utils import load_policy
+from imitation_agent.utils import load_policy, load_model
+
+
 # from sb3_local.common.policies import ActorCriticPolicy
 # from imitation_agent.policies import ActorCriticPolicy
 
@@ -80,24 +82,25 @@ def main(args):
         accel_div=args.md,
         use_batch_norm = True if args.batchNorm else False,
     )
+    if args.resume_training or args.only_inference:
+        path = args.resume_training if args.resume_training else args.only_inference
+        src = os.path.join(os.getcwd(), path)
+        # dst = os.path.join(policy_dir.name, "hockey.pt")
+        # shutil.copy(src, dst)
+        print(f"Resuming the training using ckpt: {src}")
+        checkpoint = bc.reconstruct_policy(src)
+        policy_ac.load_state_dict(checkpoint['state_dict'])
+        # policy_ac.load_state_dict(checkpoint['data'])
+        policy_ac.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
         policy_dir = tempfile.TemporaryDirectory(prefix="dagger_policy_")
-        # Resume training
-        if args.resume_training:
-            src = os.path.join(os.getcwd(), args.resume_training)
-            dst = os.path.join(policy_dir.name, "hockey.pt")
-            shutil.copy(src, dst)
-            print(f"Resuming the training using ckpt: {src}")
-            
-
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
         # create environment
         experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args) for key in [args.expert]}
-
-
         # BC trainer
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
@@ -108,6 +111,10 @@ def main(args):
             batch_size=args.batch_size,
             device=torch.device(args.device),
         )
+        if args.resume_training:
+            bc_trainer.optimizer = policy_ac.optimizer
+        else:
+            policy_ac.optimizer = bc_trainer.optimizer
 
         for epoch in range(1, args.epochs+1):
             print(f"Epoch #{epoch}")
@@ -142,6 +149,7 @@ def main(args):
         policy_dir.cleanup()
         
     print(f"Evaluating")
+    policy_ac.eval()
     args.record_fn=f'{data_dir}/{args.variant}.mp4'
     envs_eval = SubprocVecEnv([lambda: Monitor(IceHockeyLearner(args, expert=args.expert,logging_level='ERROR', print_episode_result=True)) for _ in range(1)])
     # expert_eval = IceHockeyEnv(envs_eval.observation_space, envs_eval.action_space, args.expert)
@@ -153,8 +161,8 @@ def main(args):
             batch_size=args.batch_size,
             device=torch.device(args.device),
         )
-    bc_trainer_eval = load_policy(bc_trainer_eval, path=data_dir, ckpt=args.variant)
-    bc_trainer_eval.policy.eval()
+    # bc_trainer_eval = load_model(IceHockeyModel, path=data_dir, ckpt=args.variant)
+    # bc_trainer_eval.policy.eval()
     reward, _ = evaluate_policy(bc_trainer_eval._policy, envs_eval, args.time_steps_infer, deterministic=False)
     print("Reward:", reward)
 
@@ -167,7 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time_steps', type=int, default=6000)
     parser.add_argument('-e', '--epochs', type=int, default=10)
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=10)
-    parser.add_argument('--only_inference', action='store_true')
+    parser.add_argument('--only_inference', type=str,)
     parser.add_argument('-v', '--variant', type=str, default='hockey')
     parser.add_argument('--opponent', default='ai')
     parser.add_argument('--use_opponent', action='store_true')

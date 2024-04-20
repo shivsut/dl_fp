@@ -261,7 +261,7 @@ def reconstruct_policy(
         policy: policy with reloaded weights.
     """
     policy = th.load(policy_path, map_location=utils.get_device(device))
-    assert isinstance(policy, policies.ActorCriticPolicy)
+    # assert isinstance(policy, (policies.ActorCriticPolicy | )
     return policy
 
 
