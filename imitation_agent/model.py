@@ -24,7 +24,8 @@ class IceHockeyModel(nn.Module):
                  full_std: bool = True,
                  use_expln: bool = False,
                  squash_output: bool = False,
-                 accel_div: int = 100):
+                 accel_div: int = 100,
+                 use_batch_norm=False):
 
         super(IceHockeyModel, self).__init__()
         self.observation_dim = observation_dim
@@ -48,6 +49,8 @@ class IceHockeyModel(nn.Module):
         prev_layer_dim = observation_dim
         for layer in self.net_arch:
             self.policy_nn.append(nn.Linear(prev_layer_dim, layer))
+            if use_batch_norm:
+                self.policy_nn.append(nn.BatchNorm1d(layer))
             # self.value_nn.append(nn.Linear(prev_layer_dim, layer))
             self.policy_nn.append(self.activation_function())
             # self.value_nn.append(self.activation_function())

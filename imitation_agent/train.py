@@ -77,7 +77,8 @@ def main(args):
         lr_scheduler=torch.finfo(torch.float32).max,
         net_arch=[int(x) for x in args.net_arch.split(',')],
         activation_function=activation_function,
-        accel_div=args.md
+        accel_div=args.md,
+        use_batch_norm = True if args.batchNorm else False,
     )
     if not args.only_inference:
         # where all the data will be dumped (checkpoint, video, tensorboard logs)
@@ -177,6 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume_training', type=str)
     parser.add_argument('--net_arch', type=str, default="512,512")
     parser.add_argument('--act_fn', type=str, default="tanh", choices=['tanh', 'relu'])
+    parser.add_argument('--batchNorm', action='store_true')
 
     args = parser.parse_args()
     main(args)
