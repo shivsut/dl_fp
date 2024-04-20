@@ -135,7 +135,7 @@ class IceHockeyLearner(gymnasium.Env):
         self.recorder = VideoRecorder(self.args.record_fn) if self.args.record_fn else None
 
         self.timeout = 1e10
-        self.max_timestep = 500
+        self.max_timestep = 3000
         self.current_timestep = 0
         self.max_score = 1
         self.num_players = 1
