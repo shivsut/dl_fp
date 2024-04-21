@@ -54,7 +54,7 @@ def main(args):
     rng = np.random.default_rng(0)
     data_dir = os.path.join(os.getcwd(), args.variant)
     envs = SubprocVecEnv(
-        [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR')) for _ in range(args.nenv)])
+        [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR', num_env=i)) for i in range(args.nenv)])
     # policy_ac = FeedForward32Policy(
     #     observation_space=envs.observation_space,
     #     action_space=envs.action_space,
@@ -131,11 +131,13 @@ def main(args):
                     # bc_trainer = load_policy(bc_trainer, path=policy_dir.name)
                     dagger_trainer = SimpleDAggerTrainer(
                         venv=envs,
+                        model_pt_location=f"{data_dir}/{args.variant}",
                         scratch_dir=tmpdir,
                         expert_policy=expert,
                         rng=rng,
                         bc_trainer=bc_trainer,
                         custom_logger=HierarchicalLogger(Logger(f'{data_dir}/dg_log/', output_formats=[CSVOutputFormat(os.path.join(data_dir,'train_progress.csv'))])),
+
                     )
                     dagger_trainer.train(int(args.time_steps/len(experts)),
                                         rollout_round_min_timesteps=0,
@@ -174,7 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--record_fn', default=None)
     parser.add_argument('--do_train', action='store_true')
     parser.add_argument('-t', '--time_steps', type=int, default=6000)
-    parser.add_argument('-e', '--epochs', type=int, default=10)
+    parser.add_argument('-e', '--epochs', type=int, default=1)
     parser.add_argument('-ti', '--time_steps_infer', type=int, default=10)
     parser.add_argument('--only_inference', type=str,)
     parser.add_argument('-v', '--variant', type=str, default='hockey')
@@ -187,6 +189,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume_training', type=str)
     parser.add_argument('--net_arch', type=str, default="512,512")
     parser.add_argument('--act_fn', type=str, default="tanh", choices=['tanh', 'relu'])
+    parser.add_argument('--team', type=str, default="blue", choices=['blue', 'red'])
     parser.add_argument('--batchNorm', action='store_true')
     parser.add_argument('--lr', type=float, default=1e-3)
 
