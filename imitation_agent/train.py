@@ -81,6 +81,7 @@ def main(args):
         activation_function=activation_function,
         accel_div=args.md,
         use_batch_norm = True if args.batchNorm else False,
+        learning_rate=args.lr,
     )
     if args.resume_training or args.only_inference:
         path = args.resume_training if args.resume_training else args.only_inference
@@ -187,6 +188,7 @@ if __name__ == '__main__':
     parser.add_argument('--net_arch', type=str, default="512,512")
     parser.add_argument('--act_fn', type=str, default="tanh", choices=['tanh', 'relu'])
     parser.add_argument('--batchNorm', action='store_true')
+    parser.add_argument('--lr', type=float, default=1.0)
 
     args = parser.parse_args()
     main(args)

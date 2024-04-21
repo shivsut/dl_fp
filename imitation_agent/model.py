@@ -21,7 +21,8 @@ class IceHockeyModel(nn.Module):
                  activation_function: nn.Module = nn.Tanh,
                  ortho_init: bool = True,  # TODO optimize
                  accel_div: int = 100,
-                 use_batch_norm=False):
+                 use_batch_norm=False, 
+                 learning_rate = 1.0):
 
         super(IceHockeyModel, self).__init__()
         self.observation_dim = observation_dim
@@ -51,7 +52,7 @@ class IceHockeyModel(nn.Module):
         self.policy_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
 
         self.device = device
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
 
         # TODO ortho_init
         if self.training:
