@@ -83,11 +83,11 @@ class BCTrainingMetrics:
 
     neglogp: th.Tensor
     entropy: Optional[th.Tensor]
-    ent_loss: th.Tensor  # set to 0 if entropy is None
+    loss: th.Tensor  # set to 0 if entropy is None
     prob_true_act: th.Tensor
     l2_norm: th.Tensor
     l2_loss: th.Tensor
-    loss: th.Tensor
+    total_loss: th.Tensor
 
 
 @dataclasses.dataclass(frozen=True)
@@ -96,6 +96,7 @@ class BehaviorCloningLossCalculator:
 
     ent_weight: float
     l2_weight: float
+    loss_function: str
 
     def __call__(
         self,
@@ -127,7 +128,7 @@ class BehaviorCloningLossCalculator:
 
         # policy.evaluate_actions's type signatures are incorrect.
         # See https://github.com/DLR-RM/stable-baselines3/issues/1679
-        (_, log_prob, entropy) = policy.evaluate_actions(
+        (predict_acts, log_prob, entropy) = policy.evaluate_actions(
             tensor_obs,  # type: ignore[arg-type]
             acts,
         )
@@ -140,19 +141,25 @@ class BehaviorCloningLossCalculator:
         # sum of list defaults to float(0) if len == 0.
         assert isinstance(l2_norm, th.Tensor)
 
-        ent_loss = -self.ent_weight * (entropy if entropy is not None else th.zeros(1))
+        if self.loss_function == 'entropy':
+            loss = -self.ent_weight * (entropy if entropy is not None else th.zeros(1))
+        elif self.loss_function == 'mse':
+            loss = th.nn.functional.mse_loss(predict_acts, acts)
+        elif self.loss_function == 'huber':
+            loss = th.nn.functional.huber_loss(predict_acts, acts)
+        
         neglogp = -log_prob
         l2_loss = self.l2_weight * l2_norm
-        loss = neglogp + ent_loss + l2_loss
+        total_loss = neglogp + loss + l2_loss
 
         return BCTrainingMetrics(
             neglogp=neglogp,
             entropy=entropy,
-            ent_loss=ent_loss,
+            loss=loss,
             prob_true_act=prob_true_act,
             l2_norm=l2_norm,
             l2_loss=l2_loss,
-            loss=loss,
+            total_loss=total_loss,
         )
 
 
@@ -288,6 +295,7 @@ class BC(algo_base.DemonstrationAlgorithm):
         device: Union[str, th.device] = "auto",
         custom_logger: Optional[imit_logger.HierarchicalLogger] = None,
         learning_rate: float = 1e-3,
+        loss_function: str = 'entropy',
     ):
         """Builds BC.
 
@@ -367,7 +375,7 @@ class BC(algo_base.DemonstrationAlgorithm):
             **optimizer_kwargs,
         )
         print(f"BC (learning_rate): {self.optimizer.state_dict()['param_groups'][0]['lr']}")
-        self.loss_calculator = BehaviorCloningLossCalculator(ent_weight, l2_weight)
+        self.loss_calculator = BehaviorCloningLossCalculator(ent_weight, l2_weight, loss_function)
 
     @property
     def policy(self) -> policies.ActorCriticPolicy:

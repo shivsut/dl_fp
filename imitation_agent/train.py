@@ -111,6 +111,7 @@ def main(args):
             batch_size=args.batch_size,
             device=torch.device(args.device),
             learning_rate=args.lr,
+            loss_function=args.lossFn,
         )
         if args.resume_training:
             bc_trainer.optimizer = policy_ac.optimizer
@@ -192,6 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--team', type=str, default="blue", choices=['blue', 'red'])
     parser.add_argument('--batchNorm', action='store_true')
     parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument('--lossFn', type=str, default="entropy", choices=['entropy', 'mse', 'huber'])
 
     args = parser.parse_args()
     main(args)
