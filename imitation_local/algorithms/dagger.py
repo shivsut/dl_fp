@@ -556,6 +556,7 @@ class SimpleDAggerTrainer(DAggerTrainer):
         self,
         *,
         venv: vec_env.VecEnv,
+        model_pt_location,
         scratch_dir: types.AnyPath,
         expert_policy: policies.BasePolicy,
         rng: np.random.Generator,
@@ -588,6 +589,7 @@ class SimpleDAggerTrainer(DAggerTrainer):
             rng=rng,
             **dagger_trainer_kwargs,
         )
+        self.model_pt_location = model_pt_location
         self.expert_policy = expert_policy
         if expert_policy.observation_space != self.venv.observation_space:
             raise ValueError(
@@ -655,7 +657,7 @@ class SimpleDAggerTrainer(DAggerTrainer):
         """
         total_timestep_count = 0
         round_num = 0
-
+        checkpoints = [0.25, 0.5, 0.75]
         while total_timestep_count < total_timesteps:
             collector = self.create_trajectory_collector()
             round_episode_count = 0
@@ -693,3 +695,7 @@ class SimpleDAggerTrainer(DAggerTrainer):
             # `logger.dump` is called inside BC.train within the following fn call:
             self.extend_and_update(bc_train_kwargs)
             round_num += 1
+
+            if len(checkpoints) > 0 and (float(checkpoints[0] * total_timesteps) > float(total_timestep_count)):
+                self.bc_trainer._policy.save(f"{self.model_pt_location}_checkpoint_{checkpoints[0]}.pt")
+                checkpoints.pop(0)

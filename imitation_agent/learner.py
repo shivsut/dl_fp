@@ -51,11 +51,11 @@ class DummyTeam():
         pass
 
 class IceHockeyLearner(gymnasium.Env):
-    def __init__(self, args, expert='jurgen_agent', logging_level=None, print_episode_result=False):
-        self.num_envs =1
+    def __init__(self, args, expert='jurgen_agent', logging_level=None, num_env= 0, print_episode_result=False):
         self.do_init = True
         self.args = args
         self.logging_level = logging_level
+        self.num_env = num_env
         self.print_episode_result = print_episode_result
         pi = np.pi
         x_max = 47
@@ -132,7 +132,7 @@ class IceHockeyLearner(gymnasium.Env):
         self._pystk.init(self._pystk.GraphicsConfig.none())
         if self.logging_level is not None:
             logging.basicConfig(level=self.logging_level)
-        self.recorder = VideoRecorder(self.args.record_fn) if self.args.record_fn else None
+        self.recorder = VideoRecorder(self.args.record_fn+str(num_env)+".mp4") if self.args.record_fn else None
 
         self.timeout = 1e10
         self.max_timestep = 3000
