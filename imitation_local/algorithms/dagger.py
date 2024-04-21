@@ -696,6 +696,6 @@ class SimpleDAggerTrainer(DAggerTrainer):
             self.extend_and_update(bc_train_kwargs)
             round_num += 1
 
-            if len(checkpoints) > 0 and (float(checkpoints[0] * total_timesteps) > float(total_timestep_count)):
+            if len(checkpoints) > 0 and (float(checkpoints[0] * total_timesteps) < float(total_timestep_count)):
                 self.bc_trainer._policy.save(f"{self.model_pt_location}_checkpoint_{checkpoints[0]}.pt")
                 checkpoints.pop(0)
