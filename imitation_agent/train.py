@@ -23,7 +23,7 @@ from stable_baselines3_local.common.vec_env import SubprocVecEnv
 
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
-from imitation_agent.utils import load_policy, load_model
+# from imitation_agent.utils import load_policy, load_model
 
 
 # from sb3_local.common.policies import ActorCriticPolicy
