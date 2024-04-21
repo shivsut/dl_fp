@@ -17,7 +17,7 @@ class discretization:
         self.action_low = [0, -1, 0]
         self.action_high = [1, 1, 1]
         self.accel_div = aceel_div
-        self.bins = torch.tensor([np.round(np.linspace(self.action_low[0], self.action_high[1], self.K[0], dtype=float), 3)])
+        self.bins = torch.from_numpy(np.array([np.round(np.linspace(self.action_low[0], self.action_high[1], self.K[0], dtype=float), 3)]))
 
     def __call__(self, x):
         # https://numpy.org/doc/stable/reference/generated/numpy.digitize.html

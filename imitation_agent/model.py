@@ -20,11 +20,9 @@ class IceHockeyModel(nn.Module):
                  net_arch: [int],
                  activation_function: nn.Module = nn.Tanh,
                  ortho_init: bool = True,  # TODO optimize
-                 log_std_init: float = 0.0,
-                 full_std: bool = True,
-                 use_expln: bool = False,
-                 squash_output: bool = False,
-                 accel_div: int = 100):
+                 accel_div: int = 100,
+                 use_batch_norm=False, 
+                 learning_rate = 1.0):
 
         super(IceHockeyModel, self).__init__()
         self.observation_dim = observation_dim
@@ -34,20 +32,17 @@ class IceHockeyModel(nn.Module):
         self.net_arch = net_arch
         self.activation_function = activation_function
         self.ortho_init = ortho_init
-        self.log_std_init = log_std_init
-        self.full_std = full_std
-        self.use_expln = use_expln
-        self.squash_output = squash_output
         self.lr_scheduler = lr_scheduler
         self.accel_div = float(accel_div)
 
         self.policy_nn = nn.Sequential()
-        self.value_nn = nn.Sequential()
-        self.action_nn = nn.Sequential()
+        self.use_batch_norm = use_batch_norm
 
         prev_layer_dim = observation_dim
         for layer in self.net_arch:
             self.policy_nn.append(nn.Linear(prev_layer_dim, layer))
+            if use_batch_norm:
+                self.policy_nn.append(nn.BatchNorm1d(layer))
             # self.value_nn.append(nn.Linear(prev_layer_dim, layer))
             self.policy_nn.append(self.activation_function())
             # self.value_nn.append(self.activation_function())
@@ -57,12 +52,13 @@ class IceHockeyModel(nn.Module):
         self.policy_nn.append(nn.Linear(prev_layer_dim, self.action_logits_dim))
 
         self.device = device
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
 
         # TODO ortho_init
         if self.training:
             self.init_dist()
         # self.distribution_infer = Distribution(self.action_logits_dims_list)
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=lr_scheduler)
+        # self.optimizer = None
 
 
     def predict(self, observation: np.ndarray, state : np.ndarray=None, episode_start: np.ndarray=None, deterministic:bool=False):
@@ -125,14 +121,13 @@ class IceHockeyModel(nn.Module):
                 action_logits_dims_list=self.action_logits_dims_list,
                 net_arch=self.net_arch,
                 activation_function=self.activation_function,
-                log_std_init=self.log_std_init,
-                lr_schedule=0.0,  # dummy lr schedule, not needed for loading policy alone
-                ortho_init=self.ortho_init,
-                accel_div=self.accel_div
+                accel_div=self.accel_div,
+                use_batch_norm = self.use_batch_norm
             )
         )
         return data
 
     def save(self, path: str) -> None:
-        torch.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
+        # torch.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters(), 'optimizer_state_dict':self.optimizer.state_dict()}, path)
+        torch.save({"state_dict": self.state_dict(), 'optimizer_state_dict': self.optimizer.state_dict()}, path)
 
