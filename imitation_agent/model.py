@@ -106,7 +106,7 @@ class IceHockeyModel(nn.Module):
         # actions_output = self.action_nn(policy_output)
         pred_actions = self.distribution.proba_distribution(policy_output)
         log_probability = pred_actions.log_prob(actions)
-        return pred_actions, log_probability, self.distribution.entropy()
+        return pred_actions.mode(), log_probability, self.distribution.entropy()
 
 
         # return actions.mode() if deterministic else actions.sample()

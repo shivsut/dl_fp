@@ -132,6 +132,11 @@ class BehaviorCloningLossCalculator:
             tensor_obs,  # type: ignore[arg-type]
             acts,
         )
+        # Making things compatible for backward pass
+        predict_acts = predict_acts.to(th.float32)
+        predict_acts.requires_grad_()
+        acts = acts.to(th.float32)
+
         prob_true_act = th.exp(log_prob).mean()
         log_prob = log_prob.mean()
         entropy = entropy.mean() if entropy is not None else None
