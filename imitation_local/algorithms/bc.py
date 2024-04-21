@@ -287,6 +287,7 @@ class BC(algo_base.DemonstrationAlgorithm):
         l2_weight: float = 0.0,
         device: Union[str, th.device] = "auto",
         custom_logger: Optional[imit_logger.HierarchicalLogger] = None,
+        learning_rate: float = 1e-3,
     ):
         """Builds BC.
 
@@ -361,11 +362,11 @@ class BC(algo_base.DemonstrationAlgorithm):
             if "weight_decay" in optimizer_kwargs:
                 raise ValueError("Use the parameter l2_weight instead of weight_decay.")
         optimizer_kwargs = optimizer_kwargs or {}
-        self.optimizer = optimizer_cls(
-            self.policy.parameters(),
+        self.optimizer = optimizer_cls(params=self.policy.parameters(),
+                                       lr=learning_rate,
             **optimizer_kwargs,
         )
-
+        print(f"BC (learning_rate): {self.optimizer.state_dict()['param_groups'][0]['lr']}")
         self.loss_calculator = BehaviorCloningLossCalculator(ent_weight, l2_weight)
 
     @property
