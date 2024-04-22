@@ -1,5 +1,20 @@
 # Deep Learning Spring 2024 - Final Project
 
+## Commands for creating submission
+```bash
+python -m grader state_agent -v
+python bundle.py state_agent group33
+```
+## Demo for creating Canvas compatible jit file
+Training Command:
+```bash
+python3 -m imitation_agent.train -e 1 -v AI_L2x256_blue --time_steps 500000 --time_steps_infer 10 --nenv 2 --use_opponent --expert jurgen_agent --batch_size 512 --device cuda --md 90 --net_arch "256,256"
+```
+Command for creating jit compatible file:
+```bash
+python3 -m imitation_agent.canvas_jit -e 1 -v AI_L2x256_blue_error --time_steps 1 --time_steps_infer 10 --nenv 1 --use_opponent --expert jurgen_agent --batch_size 512 --device cuda --md 90 --net_arch "256,256" --resume_training "AI_L2x256_blue/AI_L2x256_blue.pt"
+```
+
 ## Reward Function for single team match
 
 ### Offense Player (Player 1)
