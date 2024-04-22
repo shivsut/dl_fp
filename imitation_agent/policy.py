@@ -1,3 +1,4 @@
+import csv
 
 import numpy as np
 from gymnasium import spaces
@@ -24,7 +25,8 @@ class IceHockeyEnv(BasePolicy):
                 action_space: spaces.Space, 
                 expert_name: str,
                 num_players: int = 2, team: int = 0,
-                 args=None):
+                 args=None,
+                 data_dir=None):
         super().__init__(
             observation_space,
             action_space)
@@ -33,6 +35,12 @@ class IceHockeyEnv(BasePolicy):
         self.team = team
         self.model = torch.jit.load(_restore_shapes=True, f=path.join(path.dirname(path.abspath(__file__)), f'experts/{expert_name}.pt'))
         self.discrete = discretization(aceel_div=args.md) if args.md else lambda x :x
+
+        self.actions_csv_list = []
+        self.record_acts = args.rec_acts
+        if self.record_acts:
+            csvfile = open(path.join(path.dirname(path.abspath(__file__)), f'{data_dir}/actions_distrib.csv'), newline='',mode='w')
+            self.csv_writer = csv.writer(csvfile)
 
 
     def _predict(self, observation, deterministic: bool = False):
@@ -51,10 +59,16 @@ class IceHockeyEnv(BasePolicy):
         observation = torch.tensor(observation, dtype=torch.float32)
         # TODO optimise
         actions = []
+
         for i in range(len(observation)):
             obs = observation[i]
-
-            actions.append(self.discrete(self._predict(obs)))
+            acts_tensor = self._predict(obs)
+            if self.record_acts:
+                self.actions_csv_list.append([acts_tensor[0].detach().cpu().numpy().item()])
+            actions.append(self.discrete(acts_tensor))
+        if self.record_acts and (len(self.actions_csv_list) > 200):
+            self.csv_writer.writerows(self.actions_csv_list)
+            self.actions_csv_list.clear()
         return actions, state
         
         

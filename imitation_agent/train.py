@@ -89,7 +89,7 @@ def main(args):
             os.mkdir(data_dir)
         print(f"Data will saved at: {data_dir}")
         # create environment
-        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args) for key in [args.expert]}
+        experts = {key:IceHockeyEnv(envs.observation_space, envs.action_space, key, args=args, data_dir=data_dir) for key in [args.expert]}
         # BC trainer
         bc_trainer = bc.BC(
             observation_space=envs.observation_space,
@@ -181,6 +181,7 @@ if __name__ == '__main__':
     parser.add_argument('--team', type=str, default="blue", choices=['blue', 'red'])
     parser.add_argument('--batchNorm', action='store_true')
     parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument('--rec_acts', action='store_true')
 
     args = parser.parse_args()
     main(args)
