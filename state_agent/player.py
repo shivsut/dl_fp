@@ -18,14 +18,13 @@ class Team:
         self.team = None
         self.num_players = None
         self.verbose = False
-        self.use_model = False
-        self.device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.use_model = True
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         team_blue = "/dl_fp_main/AI_L2x256_blue/AI_L2x256_blue_jit.pt"
         team_red = "/dl_fp_main/AI_L2x256_red/AI_L2x256_red_jit.pt"
-        self.model_blue = torch.jit.load(team_blue, map_location='cpu')
-        self.model_red = torch.jit.load(team_red, map_location='cpu')
-        self.model = self.model_blue
+        self.model_blue = torch.jit.load(team_blue, map_location=self.device)
+        self.model_red = torch.jit.load(team_red, map_location=self.device)
         self.running_avg = []
 
     def new_match(self, team: int, num_players: int) -> list:
@@ -41,7 +40,9 @@ class Team:
         """
            TODO: feel free to edit or delete any of the code below
         """
-        if team==1:
+        if team == 0:
+            self.model = self.model_blue
+        else:
             self.model = self.model_red
         self.team, self.num_players = team, num_players
         return ['tux'] * num_players
@@ -85,12 +86,8 @@ class Team:
             # TODO: Use Policy to get the actions of each player
             if self.use_model:
                 features = extract_featuresV2(pstate, opponent_state, soccer_state, self.team)
-                features = torch.tensor(features) #.to(self.device)
-                # if player_id % 2 == 0:
-                #     action = self.model_p0(features)
-                # else:
-                #     action = self.model_p1(features)
-                action = self.model(features)
+                data = features.clone().detach().to(self.device)
+                action = self.model(data)
                 action = dict(acceleration=action[0], steer=action[1], brake=action[2])
             else:
                 # Generate random actions for all players
