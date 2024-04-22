@@ -17,10 +17,6 @@ from stable_baselines3_local.common.monitor import Monitor
 from stable_baselines3_local.common.policies import BasePolicy
 
 from stable_baselines3_local.common.vec_env import SubprocVecEnv
-
-
-
-
 from imitation_agent.learner import IceHockeyLearner
 from imitation_agent.policy import IceHockeyEnv
 # from imitation_agent.utils import load_policy, load_model
@@ -37,6 +33,8 @@ from imitation_agent.policy import IceHockeyEnv
 # EXPERT = ['yann_agent']
 # Expert agent for Defense
 # EXPERT = ['geoffrey_agent1', 'yoshua_agent1']
+
+
 class FeedForward32Policy(policies.ActorCriticPolicy):
     """A feed forward policy network with two hidden layers of 32 units.
 
@@ -50,21 +48,14 @@ class FeedForward32Policy(policies.ActorCriticPolicy):
     def __init__(self, *args, **kwargs):
         """Builds FeedForward32Policy; arguments passed to `ActorCriticPolicy`."""
         super().__init__(*args, **kwargs)
+
+
 def main(args):
     rng = np.random.default_rng(0)
     data_dir = os.path.join(os.getcwd(), args.variant)
     envs = SubprocVecEnv(
         [lambda: Monitor(IceHockeyLearner(args, expert=args.expert, logging_level='ERROR', num_env=i)) for i in range(args.nenv)])
-    # policy_ac = FeedForward32Policy(
-    #     observation_space=envs.observation_space,
-    #     action_space=envs.action_space,
-    #     lr_schedule=lambda _: torch.finfo(torch.float32).max,
-    #     net_arch=[512, 512]
-    #     # Set lr_schedule to max value to force error if policy.optimizer
-    #     # is used by mistake (should use self.optimizer instead).
-    #     # features_extractor_class=extractor
-    #
-    # )
+
     if args.act_fn == "tanh":
         activation_function = nn.Tanh
     elif args.act_fn == "relu":
@@ -85,12 +76,10 @@ def main(args):
     if args.resume_training or args.only_inference:
         path = args.resume_training if args.resume_training else args.only_inference
         src = os.path.join(os.getcwd(), path)
-        # dst = os.path.join(policy_dir.name, "hockey.pt")
-        # shutil.copy(src, dst)
         print(f"Resuming the training using ckpt: {src}")
         checkpoint = bc.reconstruct_policy(src)
+        policy_ac = policy_ac.to(args.device)
         policy_ac.load_state_dict(checkpoint['state_dict'])
-        # policy_ac.load_state_dict(checkpoint['data'])
         policy_ac.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     if not args.only_inference:
