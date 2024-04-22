@@ -2,8 +2,9 @@
 
 ## Commands for creating submission
 ```bash
-python -m grader state_agent -v
-python bundle.py state_agent group33
+python3 -m grader state_agent -v
+python3 bundle.py state_agent group33
+python3 -m grader group33.zip -v
 ```
 ## Demo for creating Canvas compatible jit file
 Training Command:
