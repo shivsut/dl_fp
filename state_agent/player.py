@@ -21,8 +21,8 @@ class Team:
         self.use_model = False
         self.device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        team_blue = "/software/users/ckverma/workspace/dl_fp_main/AI_L2x256_blue/AI_L2x256_blue_jit.pt"
-        team_red = "/software/users/ckverma/workspace/dl_fp_main/AI_L2x256_red/AI_L2x256_red_jit.pt"
+        team_blue = "/dl_fp_main/AI_L2x256_blue/AI_L2x256_blue_jit.pt"
+        team_red = "/dl_fp_main/AI_L2x256_red/AI_L2x256_red_jit.pt"
         self.model_blue = torch.jit.load(team_blue, map_location='cpu')
         self.model_red = torch.jit.load(team_red, map_location='cpu')
         self.model = self.model_blue
