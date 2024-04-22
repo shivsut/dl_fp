@@ -20,8 +20,8 @@ class Team:
         self.verbose = False
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        team_blue = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_blue_jit.pt') 
-        team_red = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_red_jit.pt')  
+        team_blue = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_blue.pt') 
+        team_red = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_red.pt')  
         self.model_blue = torch.jit.load(team_blue, map_location=self.device)
         self.model_red = torch.jit.load(team_red, map_location=self.device)
         self.running_avg = []
