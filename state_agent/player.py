@@ -9,7 +9,7 @@ def limit_period(angle):
     # turn angle into -1 to 1 
     return angle - torch.floor(angle / 2 + 0.5) * 2 
 
-def extract_featuresV2(pstate, soccer_state, opponent_state, team_id):
+def extract_featuresV2(pstate, opponent_state, soccer_state, team_id):
     # features of ego-vehicle
     kart_front = torch.tensor(pstate['kart']['front'], dtype=torch.float32)[[0, 2]]
     kart_center = torch.tensor(pstate['kart']['location'], dtype=torch.float32)[[0, 2]]
@@ -23,7 +23,7 @@ def extract_featuresV2(pstate, soccer_state, opponent_state, team_id):
 
     kart_to_puck_angle_difference = limit_period((kart_angle - kart_to_puck_angle)/np.pi)
 
-    # features of score-line 
+    # features of score-line
     goal_line_center = torch.tensor(soccer_state['goal_line'][(team_id+1)%2], dtype=torch.float32)[:, [0, 2]].mean(dim=0)
 
     puck_to_goal_line = (goal_line_center-puck_center) / torch.norm(goal_line_center-puck_center)
@@ -33,6 +33,7 @@ def extract_featuresV2(pstate, soccer_state, opponent_state, team_id):
         puck_center[0], puck_center[1], puck_to_goal_line[0], puck_to_goal_line[1]], dtype=torch.float32)
 
     return features 
+
 
 
 class Team:
