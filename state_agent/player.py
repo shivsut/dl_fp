@@ -18,13 +18,10 @@ class Team:
         self.team = None
         self.num_players = None
         self.verbose = False
-        self.use_model = True
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        team_blue = "/dl_fp_main/AI_L2x256_blue/AI_L2x256_blue_jit.pt"
-        team_red = "/dl_fp_main/AI_L2x256_red/AI_L2x256_red_jit.pt"
-        team_blue = 'grader_blue/10_blue.pt'
-        team_red = 'grader_blue/red.pt'
+        team_blue = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_blue_jit.pt') 
+        team_red = path.join(path.dirname(path.abspath(__file__)), 'AI_L2x256_red_jit.pt')  
         self.model_blue = torch.jit.load(team_blue, map_location=self.device)
         self.model_red = torch.jit.load(team_red, map_location=self.device)
         self.running_avg = []
@@ -83,20 +80,20 @@ class Team:
         """
 
         actions = []
-        # start = time.time()
+        if self.verbose:
+            start = time.time()
         for player_id, pstate in enumerate(player_state):
-            # TODO: Use Policy to get the actions of each player
-            # if self.use_model:
             features = extract_featuresV2(pstate, opponent_state, soccer_state, self.team)
             data = features.clone().detach().to(self.device)
             action = self.model(data)
             action = dict(acceleration=action[0], steer=action[1], brake=action[2])
             # accumulate the action of each player
             actions.append(action)
-        # end = time.time()
-        # self.running_avg.append(end-start)
-        # if len(self.running_avg) > 20:
-        #     print(f"avg act time {np.mean(self.running_avg)*1000} ms")
-        #     self.running_avg = []
+        if self.verbose:
+            end = time.time()
+            self.running_avg.append(end-start)
+            if len(self.running_avg) > 20:
+                print(f"avg act time {np.mean(self.running_avg)*1000} ms")
+                self.running_avg = []
         return actions
 
