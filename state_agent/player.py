@@ -7,6 +7,7 @@ import numpy as np
 from imitation_agent.features import extract_features, extract_featuresV2
 
 
+
 class Team:
     agent_type = 'state'
     def __init__(self):
@@ -18,11 +19,13 @@ class Team:
         self.num_players = None
         self.verbose = False
         self.use_model = False
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        model = 'only_test_jit.pt'
-        path1 = path.join(path.dirname(path.abspath(__file__)), model)
-        self.model_p0 = torch.jit.load(path1)
-        self.model_p1 = torch.jit.load(path1)
+        # model = 'only_test_jit.pt'
+        # path1 = path.join(path.dirname(path.abspath(__file__)), model)
+        path1 = "dl_fp_main/AI_L2x256_blue/AI_L2x256_blue_jit.pt"
+        self.model_p0 = torch.jit.load(path1).to(self.device)
+        self.model_p1 = torch.jit.load(path1).to(self.device)
         self.use_model = True
         self.running_avg = []
 
@@ -81,7 +84,7 @@ class Team:
             # TODO: Use Policy to get the actions of each player
             if self.use_model:
                 features = extract_featuresV2(pstate, opponent_state, soccer_state, self.team)
-                features = torch.tensor(features)
+                features = torch.tensor(features).to(self.device)
                 if player_id % 2 == 0:
                     action = self.model_p0(features)
                 else:
@@ -96,8 +99,8 @@ class Team:
             actions.append(action)
         end = time.time()
         self.running_avg.append(end-start)
-        if len(self.running_avg) > 20:
-            print(f"avg act time {np.mean(self.running_avg)*1000} ms")
-            self.running_avg = []
+        # if len(self.running_avg) > 20:
+        #     print(f"avg act time {np.mean(self.running_avg)*1000} ms")
+        #     self.running_avg = []
         return actions
 
